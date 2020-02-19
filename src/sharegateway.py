@@ -1,9 +1,10 @@
+from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import Factory
-from twisted.internet import reactor
+from twisted.internet import reactor, protocol
 
 
-class ServerProtocol(LineReceiver):
+class GatewayProtocol(LineReceiver):
     def __init__(self):
         self.name = None
         self.master_node = False
@@ -11,7 +12,7 @@ class ServerProtocol(LineReceiver):
     def connectionMade(self):
         if len(self.factory.peers) == 0:
             self.master_node = True
-            print("You are the master.")
+            print("You are a gateway.")
         self.factory.peers.append(self)
         print("New peer!")
 
@@ -22,19 +23,22 @@ class ServerProtocol(LineReceiver):
         print("Line received")
 
 
-class ServerFactory(Factory):
-    protocol = ServerProtocol
+class GatewayFactory(Factory):
+    protocol = GatewayProtocol
 
     def __init__(self):
         self.peers = []
         self.reserved_ports = []
 
 
-class Server:
+class ShareGateway:
     def __init__(self, port: int):
         self.port = port
-        print("started server")
-        reactor.listenTCP(port, ServerFactory())
-        reactor.run()
+        print("Started a share gateway on ", port)
+        server_end_point = TCP4ServerEndpoint(reactor, port)
+        server_end_point.listen(GatewayFactory())
+
+
+
 
 
