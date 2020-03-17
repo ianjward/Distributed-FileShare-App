@@ -14,17 +14,17 @@ if __name__ == '__main__':
     # share_ips = local_network.available_shares.split(" ")
 
     # Make this computer act as the master for a share
-    MasterNode(server_port, "MyTestShare")
+    MasterNode(server_port, "MyTestShare", '1234')
 
     # Make this computer act as a slave for a share (testing purposes)
-    SlaveNode(3025, network.get_local_ip_address())
+    test_slave = SlaveNode(3025, network.get_local_ip_address())
+    # test_slave.create_file()
 
     # app = QApplication(sys.argv)
     # gui = GUI()
     # gui.show()
 
     reactor.run()
-
     # sys.exit(app.exec_())
 
 # spawn on 3025 then +1 for each server after that

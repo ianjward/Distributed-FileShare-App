@@ -1,6 +1,5 @@
 import socket
 from twisted.application import internet
-from twisted.spread import pb
 import pickle
 from src import protocols
 
@@ -49,7 +48,6 @@ def decode_msg(msg) -> Message:
     return pickle.loads(msg)
 
 
-class MessageCopy(Message, pb.Copyable):
-    pass
+
 
 

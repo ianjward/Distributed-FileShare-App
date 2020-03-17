@@ -1,11 +1,9 @@
-from datetime import datetime
-import uuid
 from _socket import SOL_SOCKET, SO_BROADCAST
 from enum import Enum
 import netifaces as netifaces
-from twisted.internet.protocol import DatagramProtocol, Protocol, ClientFactory, Factory
+from twisted.internet.protocol import DatagramProtocol, Protocol, Factory
 from twisted.protocols.policies import TimeoutMixin
-from src.network_utilities import get_local_ip_address, AuthenticationRequest, AuthenticationResponse, decode_msg, Message
+from src.network_utilities import get_local_ip_address, AuthenticationRequest, decode_msg, Message
 
 
 class State (Enum):
@@ -68,58 +66,34 @@ class NetworkDiscoveryProtocol(DatagramProtocol, TimeoutMixin):
 
 class SlaveProtocol(Protocol):
     def connectionMade(self):
-        print("SLAVE: Talking to share master")
+        self.factory.new_connection_made(self)
 
     def dataReceived(self, encoded_msg):
         msg = decode_msg(encoded_msg)
-        if msg.mType == "AUTH_REQ":
-            print("SLAVE: Attempting to authenticate w/master")
-            response = AuthenticationResponse("1234", "linuxuser ", "supersecretpassword")
-            self.transport.write(response.encode_msg())
+        self.factory.receive_msg(msg, self)
 
     def clientConnectionLost(self, connector, reason):
-        print(reason)
+        self.factory.connection_lost(self, reason)
 
-
-class SlaveFactory(ClientFactory):
-    protocol = SlaveProtocol
-
-    def __init__(self, ip:str):
-        self.ip = ip
+    def sendMessage(self, msg: Message):
+        encoded_msg = msg.encode_msg()
+        self.transport.write(encoded_msg)
 
 
 class MasterProtocol(Protocol):
     def connectionMade(self):
-        print("MASTER: New connection detected!")
-        print("MASTER: Requesting authentication")
-        response = AuthenticationRequest().encode_msg()
-        self.transport.write(response)
+        self.factory.new_connection_made(self)
 
     def connectionLost(self, reason):
-        print("MASTER: ", "Connection lost")
-        self.factory.nodes.remove(self)
+        self.factory.connection_lost(self, reason)
 
     def dataReceived(self, encoded_msg):
-        print("MASTER: ","Msg received")
         msg = decode_msg(encoded_msg)
-        if msg.mType == 'AUTH_SYN':
-            self.authenticate(msg)
+        self.factory.receive_msg(msg, self)
 
-    # message [Authentication, ip, accesscode, username, password]
-    def authenticate(self, msg):
-        if msg.share_password == self.factory.access_code:
-            self.factory.nodes.append(msg.username)  # I'm not sure what exactly to put in nodes for now
-            print("MASTER: Authenticated: ", msg.username, msg.user_password)
+    def sendMessage(self, msg:Message):
+        encoded_msg = msg.encode_msg()
+        self.transport.write(encoded_msg)
 
 
-class MasterFactory(Factory):
-    protocol = MasterProtocol
 
-    def __init__(self, share_name:str, access_code: str):
-        self.nodes = []
-        self.users = []
-        self.files = []
-        self.name = share_name
-        self.uuid = share_name + "_" + datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + "_" + str(uuid.getnode())
-        self.access_code = access_code
-        self.ip = get_local_ip_address()
