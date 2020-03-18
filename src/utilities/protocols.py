@@ -1,9 +1,10 @@
 from _socket import SOL_SOCKET, SO_BROADCAST
 from enum import Enum
 import netifaces as netifaces
-from twisted.internet.protocol import DatagramProtocol, Protocol, Factory
+from twisted.internet.protocol import DatagramProtocol, Protocol
 from twisted.protocols.policies import TimeoutMixin
-from src.network_utilities import get_local_ip_address, AuthenticationRequest, decode_msg, Message
+from src.utilities.network_utilities import get_local_ip_address
+from src.utilities.messages import decode_msg, Message
 
 
 class State (Enum):

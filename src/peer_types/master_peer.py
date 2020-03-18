@@ -2,8 +2,9 @@ from datetime import datetime
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
-from src.protocols import MasterProtocol
-from src.network_utilities import get_local_ip_address, Message, AuthenticationRequest
+from src.utilities.protocols import MasterProtocol
+from src.utilities.network_utilities import get_local_ip_address
+from src.utilities.messages import Message, AuthenticationRequest
 import uuid
 
 

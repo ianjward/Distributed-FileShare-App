@@ -1,10 +1,8 @@
-import sys
-from PySide2.QtWidgets import QApplication
-from src.gui import GUI
-from src.master_node import MasterNode
-from src.slave_node import SlaveNode
+from src.utilities.file_utilities import ShareFile, monitor_file_changes
+from src.peer_types.master_peer import MasterNode
+from src.peer_types.slave_peer import SlaveNode
 from twisted.internet import reactor
-import src.network_utilities as network
+import src.utilities.network_utilities as network
 
 
 if __name__ == '__main__':
@@ -17,9 +15,11 @@ if __name__ == '__main__':
     MasterNode(server_port, "MyTestShare", '1234')
 
     # Make this computer act as a slave for a share (testing purposes)
-    test_slave = SlaveNode(3025, network.get_local_ip_address())
+    share_slave = SlaveNode(3025, network.get_local_ip_address())
     # test_slave.create_file()
-
+    share_file = ShareFile('monitored_files/test.txt')
+    share_file.__hash__()
+    monitor_file_changes(share_slave)
     # app = QApplication(sys.argv)
     # gui = GUI()
     # gui.show()

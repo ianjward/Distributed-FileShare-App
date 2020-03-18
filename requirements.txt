@@ -1,3 +1,4 @@
+watchdog
 attrs==19.3.0
 Automat==0.8.0
 constantly==15.1.0
