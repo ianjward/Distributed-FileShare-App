@@ -8,7 +8,7 @@ from src.peer_types.slave_peer import SlaveNode
 
 class ShareFile:
     sha1_hash = hashlib.sha1()
-    BUF_SIZE = 65536  # 64kb chunks
+    BUF_SIZE = 262164  # 256kb chunks
     location = 'test.txt'
     chunks = {}
 
@@ -52,6 +52,9 @@ class FileWatcher(PatternMatchingEventHandler):
         self.process(event)
 
     def on_created(self, event):
+        self.process(event)
+
+    def on_deleted(self, event):
         self.process(event)
 
 

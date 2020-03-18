@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     # Make this computer act as a slave for a share (testing purposes)
     share_slave = SlaveNode(3025, network.get_local_ip_address())
-    # test_slave.create_file()
+
     share_file = ShareFile('monitored_files/test.txt')
     share_file.__hash__()
     monitor_file_changes(share_slave)
