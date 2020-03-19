@@ -8,7 +8,6 @@ incremental==17.5.0
 netifaces==0.10.9
 PyHamcrest==2.0.0
 PySide2==5.14.1
-pywin32==227
 shiboken2==5.14.1
 six==1.14.0
 Twisted==19.10.0
