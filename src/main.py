@@ -40,3 +40,4 @@ if __name__ == '__main__':
 # spawn on 3025 then +1 for each server after that
 
 
+# pywin32==227
