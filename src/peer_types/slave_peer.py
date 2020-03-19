@@ -9,27 +9,36 @@ class SlaveNode(ClientFactory):
     protocol = SlaveProtocol
 
     def __init__(self, port: int, server_ip: str):
-        self.ip = server_ip
+        self.master_ip = server_ip
+        self.port = port
         self.master_conn = reactor.connectTCP(server_ip, port, self)
 
     def new_connection_made(self, protocol:SlaveProtocol):
-        print("SLAVE: Talking to share master")
+        print("SLAVE: Talking to Master at", self.master_ip, ':', self.port)
 
     def receive_msg(self, msg:Message, protocol:SlaveProtocol):
         m_type = msg.mType
 
+        print('SLAVE: Msg received')
         if m_type == 'AUTH_REQ':
             self.authenticate(protocol)
+        if m_type == 'AUTH_OK':
+            self.update_all_share_files(protocol)
         elif m_type == 'something':
             print('someothermessage')
 
     def authenticate(self, protocol:SlaveProtocol):
-        print("SLAVE: Sending Authentication Info")
+        print("SLAVE: Sending Authentication Info to master")
         response = AuthenticationResponse("1234", "linuxuser ", "supersecretpassword")
         protocol.sendMessage(response)
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
+
+    def update_all_share_files(self, protocol:SlaveProtocol):
+        response = Message("SEND_ALL")
+        protocol.sendMessage(response)
+        print('SLAVE: Requesting all files')
 
     # def create_file(self):
     #     file = open("test.txt", "w+")

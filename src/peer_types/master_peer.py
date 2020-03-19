@@ -1,9 +1,9 @@
+import socket
 from datetime import datetime
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.protocols import MasterProtocol
-from src.utilities.network_utilities import get_local_ip_address
 from src.utilities.messages import Message, AuthenticationRequest
 import uuid
 
@@ -14,16 +14,19 @@ class MasterNode(Factory):
     def __init__(self, port: int, share_name: str, access_code:str):
         print("MASTER: Started a share on ", get_local_ip_address(),":", port)
 
-        self.nodes = []
+        self.endpoints = []
+        self.nxt_open_port = port
         self.users = []
-        self.files = []
+        self.tracked_files = {}
         self.name = share_name
         self.uuid = share_name + "_" + datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + "_" + str(uuid.getnode())
         self.access_code = access_code
         self.ip = get_local_ip_address()
 
-        self.endpoint1 = TCP4ServerEndpoint(reactor, port)
-        self.endpoint1.listen(self)
+        new_endpoint = TCP4ServerEndpoint(reactor, port)
+        new_endpoint.listen(self)
+        self.endpoints.insert(self.nxt_open_port, new_endpoint)  # Need to do after authentication
+        self.nxt_open_port += 1
 
     def new_connection_made(self, protocol:MasterProtocol):
         print("MASTER: New connection detected!")
@@ -36,21 +39,31 @@ class MasterNode(Factory):
         print("MASTER:","Msg received")
 
         if mType == 'AUTH_SYN':
-            self.authenticate(msg)
+            self.authenticate(msg, protocol)
+
+        elif mType == 'SEND_ALL':
+            self.send_all_files(protocol)
 
         elif mType == 'something':
             print('someothermessage')
 
-    def authenticate(self, msg):
+    def authenticate(self, msg, protocol:MasterProtocol):
         if msg.share_password == self.access_code:
-            self.nodes.append(msg.username)  # I'm not sure what exactly to put in nodes for now
             print("MASTER: Authenticated:", msg.username, msg.user_password)
+            response = Message("AUTH_OK")
+            protocol.sendMessage(response)
 
     def connection_lost(self, node, reason):
         print("MASTER:", "Connection lost", reason)
-        self.nodes.remove(node)
+        self.endpoints.remove(node)
+
+    def send_all_files(self, protocol:MasterProtocol):
+        print('MASTER: Gathering all files')
 
 
-
-
+# Returns internet facing IP. Might not work without internet? But works on both linux and Windows while others did not.
+def get_local_ip_address():
+    internet = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    internet.connect(("8.8.8.8", 80))
+    return internet.getsockname()[0]
 
