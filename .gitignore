@@ -2,3 +2,6 @@ p2p.py
 qtExample.py
 test.py
 /env
+/venv
+.gitignore
+.idea
