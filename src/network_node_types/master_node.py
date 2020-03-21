@@ -10,14 +10,12 @@ from src.protocols.master import MasterProtocol
 from src.utilities.file_manager import ShareFile
 from src.utilities.messages import AuthNeededMsg, Message, MasterUpdateMsg
 
-get_local_ip = lambda: src.utilities.networking.get_local_ip_address()
-
 
 class MasterNode(Factory):
     protocol = MasterProtocol
 
     def __init__(self, port: int, share_name: str, access_code: str, broadcast_proto):
-        print("MASTER: Started a share on ", get_local_ip(), ":", port)
+        print("MASTER: Started a share on ", self.get_local_ip(), ":", port)
 
         self.endpoints = []
         self.nxt_open_port = port
@@ -26,7 +24,7 @@ class MasterNode(Factory):
         self.name = share_name
         self.uuid = share_name + "_" + datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + "_" + str(uuid.getnode())
         self.access_code = access_code
-        self.ip = get_local_ip()
+        self.ip = self.get_local_ip()
         self.file_directory = 'monitored_files/' + share_name + '/'
         self.broadcast_proto = broadcast_proto
 
@@ -45,7 +43,7 @@ class MasterNode(Factory):
         self.nxt_open_port += 1
         self.open_new_port()
 
-        shares[self.name] = (self.nxt_open_port, get_local_ip())
+        shares[self.name] = (self.nxt_open_port, self.get_local_ip())
         msg = MasterUpdateMsg(shares)
         self.broadcast_proto.send_datagram(msg)
 
@@ -60,7 +58,6 @@ class MasterNode(Factory):
 
         if mType == 'AUTH_SYN':
             self.authenticate(msg, protocol)
-
         elif mType == 'SEND_ALL':
             self.send_all_files(protocol)
 
@@ -72,7 +69,6 @@ class MasterNode(Factory):
 
     def connection_lost(self, node, reason):
         print("MASTER:", "Connection lost", reason)
-        self.endpoints.remove(node)
 
     def send_all_files(self, protocol: MasterProtocol):
         print('MASTER: Gathering all files')
@@ -84,3 +80,6 @@ class MasterNode(Factory):
             #     print(f.read())
             share_file = ShareFile(file)
             share_file.__hash__()
+
+    def get_local_ip(self):
+        return src.utilities.networking.get_local_ip_address()
