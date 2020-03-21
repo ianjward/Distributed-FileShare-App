@@ -28,7 +28,7 @@ class AuthenticationResponse(Message):
         self.sender = get_local_ip_address()
 
 
-class AuthenticationRequest(Message):
+class AuthNeededMsg(Message):
     def __init__(self):
         super().__init__("AUTH_REQ")
 
@@ -38,6 +38,23 @@ class PushFileMsg(Message):
         super().__init__('PUSH_FILE')
         self.file_name = None
         self.data = None
+
+
+class RequestMastersMsg(Message):
+    def __init__(self):
+        super().__init__("REQST_MSTRS")
+
+
+class MasterListMsg(Message):
+    def __init__(self, mstr_dict:dict):
+        super().__init__("MSTR_LIST")
+        self.master_dict = mstr_dict
+
+
+class UpdateMasterListMsg(Message):
+    def __init__(self, mstr_dict:dict):
+        super().__init__("MSTR_UPDTE")
+        self.master_dict = mstr_dict
 
 
 def decode_msg(msg) -> Message:

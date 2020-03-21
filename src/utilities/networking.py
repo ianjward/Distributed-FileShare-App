@@ -1,4 +1,3 @@
-import socket
 import netifaces as netifaces
 import uuid
 from _socket import SOL_SOCKET, SO_BROADCAST
@@ -7,12 +6,15 @@ from twisted.internet.protocol import DatagramProtocol, Factory, ClientFactory
 from twisted.protocols.policies import TimeoutMixin
 from src.protocols.master import MasterProtocol
 from src.protocols.slave import SlaveProtocol
-from src.utilities.messages import decode_msg, AuthenticationRequest, Message, AuthenticationResponse
+from src.utilities.messages import *
 from datetime import datetime
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.application import internet
 from twisted.internet import reactor
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
+
+
+global discovery_protocol
 
 
 class State(Enum):
@@ -23,40 +25,45 @@ class NetworkDiscoveryProtocol(DatagramProtocol, TimeoutMixin):
     def startProtocol(self):
         self.transport.socket.setsockopt(SOL_SOCKET, SO_BROADCAST, True)
         self.state = "NEEDS_IPS"
-        self.available_shares = ""  # Just keeping them as a string to make encoding easier
-        # self.available_shares = str(get_local_ip_address())  # Just keeping them as a string to make encoding easier
-        self.sendDatagram()
-        reactor.callLater(3.5, create_node, self)
+        self.available_shares = {}
+        self.send_datagram(RequestMastersMsg())
+        reactor.callLater(3.5, create_network_node, self)
 
-    def sendDatagram(self):
+    def send_datagram(self, msg:Message):
         broadcast_port = 7999
         broadcast_ip = '255.255.255.255'
-        msg = Message("Send available LAN share IP's")
-
-        # Broadcast a request for all Share ip's
         self.transport.write(msg.encode_msg(), (broadcast_ip, broadcast_port))
 
     def datagramReceived(self, encoded_msg, host: tuple):
+        msg = decode_msg(encoded_msg)
         sender = host[0]
+        valid_sender = sender_is_valid(sender)
+        mtype = msg.mType
 
-        # If idle, send Share ip's to a requesting computer
-        if self.state == "HAS_IPS" and sender_is_valid(sender):
-            response = Message(self.available_shares).encode_msg()
+        if mtype == 'REQST_MSTRS' and valid_sender:
+            self.send_master_list(sender)
+
+        elif mtype == 'MSTR_LIST' and valid_sender:
+            self.receive_master_list(msg)
+
+    def send_master_list(self, sender:tuple):
+        if self.state == "HAS_IPS":
+            response = MasterListMsg(self.available_shares).encode_msg()
             self.transport.write(response, (sender, 7999))
             print("Received Share ip request from: " + str(sender))
             print("Responded to ", str(sender), " with ", self.available_shares)
 
-        # Receive Share ip's from a networked computer
-        if self.state == "NEEDS_IPS" and sender_is_valid(sender):
-            self.available_shares = str(decode_msg(encoded_msg))
-            print('Message received: ', decode_msg(encoded_msg))
+    def receive_master_list(self, msg:MasterListMsg):
+        if self.state == "NEEDS_IPS":
+            self.available_shares = msg.master_dict
+            print('Message received: ', msg.master_dict)
             self.state = "HAS_IPS"
 
 
-def create_node(protocol:NetworkDiscoveryProtocol):
+def create_network_node(protocol:NetworkDiscoveryProtocol):
     if protocol.state == 'NEEDS_IPS':
         protocol.state = "HAS_IPS"
-        protocol.available_shares += str(get_local_ip_address())
+        protocol.available_shares[get_local_ip_address()] = 3025
         print("No available shares found.")
         MasterNode(3025, "MyTestShare", '1234')
     else:
@@ -87,7 +94,7 @@ class MasterNode(Factory):
     def new_connection_made(self, protocol: MasterProtocol):
         print("MASTER: New connection detected!")
         print("MASTER: Requesting authentication")
-        response = AuthenticationRequest()
+        response = AuthNeededMsg()
         protocol.sendMessage(response)
 
     def receive_msg(self, msg: Message, protocol: MasterProtocol):
@@ -184,10 +191,11 @@ def sender_is_valid(sender: str) -> bool:
     return True
 
 
-# # Discovers all available shares on the lan
+# Discovers all available shares on the lan
 def find_lan_shares():
     print("Searching for Lan Shares")
 
+    global discovery_protocol
     discovery_protocol = NetworkDiscoveryProtocol()
     server = internet.UDPServer(7999, discovery_protocol)
     server.startService()
