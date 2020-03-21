@@ -1,5 +1,5 @@
 from twisted.internet import reactor
-import src.utilities.protocols as network
+import src.utilities.networking as network
 
 
 if __name__ == '__main__':

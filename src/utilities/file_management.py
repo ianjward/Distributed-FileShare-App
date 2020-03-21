@@ -3,7 +3,7 @@ import threading
 import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
-from src.peer_types.slave_peer import SlaveNode
+from src.utilities.networking import SlaveNode
 
 
 class ShareFile:
