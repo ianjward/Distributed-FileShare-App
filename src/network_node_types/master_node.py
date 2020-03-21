@@ -31,9 +31,7 @@ class MasterNode(Factory):
         self.broadcast_proto = broadcast_proto
 
         self.initialize_files()
-        new_endpoint = TCP4ServerEndpoint(reactor, port)
-        new_endpoint.listen(self)
-        self.endpoints.insert(self.nxt_open_port, new_endpoint)  # Need to do after authentication
+        self.open_new_port()
 
     def new_connection_made(self, protocol: MasterProtocol):
         print("MASTER: New connection detected!")
@@ -45,10 +43,16 @@ class MasterNode(Factory):
     def update_available_shares(self):
         shares = self.broadcast_proto.available_shares
         self.nxt_open_port += 1
+        self.open_new_port()
 
         shares[self.name] = (self.nxt_open_port, get_local_ip())
         msg = MasterUpdateMsg(shares)
         self.broadcast_proto.send_datagram(msg)
+
+    def open_new_port(self):
+        new_endpoint = TCP4ServerEndpoint(reactor, self.nxt_open_port)
+        new_endpoint.listen(self)
+        self.endpoints.insert(self.nxt_open_port, new_endpoint)  # Need to do after authentication
 
     def receive_msg(self, msg: Message, protocol: MasterProtocol):
         mType = msg.mType
