@@ -42,9 +42,11 @@ class NetworkDiscoveryProtocol(DatagramProtocol, TimeoutMixin):
         mtype = msg.mType
 
         if mtype == 'REQST_MSTRS' and valid_sender:
+            print("NETWORK: Received msg", msg.mType)
             self.send_master_list(sender)
 
         elif mtype == 'MSTR_LIST' and valid_sender:
+            print("NETWORK: Received msg", msg.mType)
             self.receive_master_list(msg)
 
     def send_master_list(self, sender:tuple):
@@ -64,7 +66,7 @@ class NetworkDiscoveryProtocol(DatagramProtocol, TimeoutMixin):
 def create_network_node(protocol:NetworkDiscoveryProtocol):
     if protocol.state == 'NEEDS_IPS':
         protocol.state = "HAS_IPS"
-        protocol.available_shares["MyTestShare"] = (3025, get_local_ip_address())
+        protocol.available_shares["ians_share"] = (3025, get_local_ip_address())
         print("No available shares found.")
         MasterNode(3025, "MyTestShare", '1234')
     else:
