@@ -12,6 +12,8 @@ from twisted.internet import reactor
 
 global discovery_protocol
 global wanted_networks
+global slaves
+global masters
 
 
 class State(Enum):
@@ -41,11 +43,15 @@ class BroadcastProtocol(DatagramProtocol, TimeoutMixin):
         mtype = msg.mType
 
         if mtype == 'REQST_MSTRS' and valid_sender:
-            print("NETWORK: Received msg", msg.mType)
+            print("BROADCAST: Received msg", msg.mType)
             self.send_master_list(sender)
 
         elif mtype == 'MSTR_LIST' and valid_sender:
-            print("NETWORK: Received msg", msg.mType)
+            print("BROADCAST: Received msg", msg.mType)
+            self.receive_master_list(msg)
+
+        elif mtype == 'MSTR_UPDTE':
+            print("BROADCAST: Received msg", msg.mType)
             self.receive_master_list(msg)
 
     def send_master_list(self, sender:tuple):
@@ -56,18 +62,18 @@ class BroadcastProtocol(DatagramProtocol, TimeoutMixin):
             print("Responded to ", str(sender), " with ", self.available_shares)
 
     def receive_master_list(self, msg:MasterListMsg):
-        if self.state == "NEEDS_IPS":
-            self.available_shares = msg.master_dict
-            print('Message received: ', msg.master_dict)
-            self.state = "HAS_IPS"
+        self.available_shares = msg.master_dict
+        print('BROADCAST: Dictionary set:', msg.master_dict)
+        self.state = "HAS_IPS"
 
 
 def create_network_node(protocol:BroadcastProtocol):
+    global masters
     if protocol.state == 'NEEDS_IPS':
         protocol.state = "HAS_IPS"
         protocol.available_shares["ians_share"] = (3025, get_local_ip())
         print("No available shares found.")
-        MasterNode(3025, "ians_share", '1234')
+        MasterNode(3025, "ians_share", '1234', protocol)
         # @TODO read-in share name + access code + always just start at 3025?
 
     for share in protocol.available_shares:

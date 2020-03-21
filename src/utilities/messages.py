@@ -52,7 +52,7 @@ class MasterListMsg(Message):
         self.master_dict = mstr_dict
 
 
-class UpdateMasterListMsg(Message):
+class MasterUpdateMsg(Message):
     def __init__(self, mstr_dict:dict):
         super().__init__("MSTR_UPDTE")
         self.master_dict = mstr_dict
