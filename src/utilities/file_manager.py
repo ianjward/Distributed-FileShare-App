@@ -3,13 +3,12 @@ import threading
 import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
-from src.utilities.networking import SlaveNode
 
 
 class ShareFile:
     sha1_hash = hashlib.sha1()
     BUF_SIZE = 262164  # 256kb chunks
-    location = 'test.txt'
+    location = ''
     chunks = {}
 
     def __init__(self, file_path:str):
@@ -33,7 +32,7 @@ class ShareFile:
 class FileWatcher(PatternMatchingEventHandler):
     patterns = ['*']
 
-    def __init__(self, share: SlaveNode):
+    def __init__(self, share):
         super().__init__()
         self.share_node = share
 
@@ -58,13 +57,13 @@ class FileWatcher(PatternMatchingEventHandler):
         self.process(event)
 
 
-def monitor_file_changes(slave:SlaveNode):
+def monitor_file_changes(slave):
     threading.Thread(target=start_file_monitor, args=([slave]), daemon=True).start()
 
 
-def start_file_monitor(slave:SlaveNode):
+def start_file_monitor(slave):
     observer = Observer()
-    observer.schedule(FileWatcher(slave), 'monitored_files\\')
+    observer.schedule(FileWatcher(slave), 'monitored_files\\' + slave.share_name + '\\')
     observer.start()
 
     try:
@@ -74,3 +73,9 @@ def start_file_monitor(slave:SlaveNode):
         observer.stop()
 
     observer.join()
+
+
+# def create_file(self):
+#     file = open("test.txt", "w+")
+#     file.write("hello world")
+#     file.close()

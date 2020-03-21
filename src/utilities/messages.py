@@ -1,22 +1,23 @@
 import pickle
-import socket
+import socket  # Wonder why pycharm thinks this isn't used...it is!
+import src.utilities.networking
 
 
-# Returns internet facing IP. Might not work without internet? But works on both linux and Windows while others did not.
-def get_local_ip_address():
-    internet = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    internet.connect(("8.8.8.8", 80))
-    return internet.getsockname()[0]
+get_local_ip = lambda: src.utilities.networking.get_local_ip_address()
 
 
 class Message:
     def __init__(self, msg_type: str):
         super().__init__()
         self.mType = msg_type
-        self.sender_ip = get_local_ip_address()
+        self.sender_ip = get_local_ip()
 
     def encode_msg(self):
         return pickle.dumps(self)
+
+
+def decode_msg(msg) -> Message:
+    return pickle.loads(msg)
 
 
 class AuthenticationResponse(Message):
@@ -25,7 +26,7 @@ class AuthenticationResponse(Message):
         self.share_password = share_password
         self.username = username
         self.user_password = user_password
-        self.sender = get_local_ip_address()
+        self.sender = get_local_ip()
 
 
 class AuthNeededMsg(Message):
@@ -56,6 +57,3 @@ class UpdateMasterListMsg(Message):
         super().__init__("MSTR_UPDTE")
         self.master_dict = mstr_dict
 
-
-def decode_msg(msg) -> Message:
-    return pickle.loads(msg)
