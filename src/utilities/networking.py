@@ -15,6 +15,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 
 
 global discovery_protocol
+global wanted_networks
 
 
 class State(Enum):
@@ -63,12 +64,21 @@ class NetworkDiscoveryProtocol(DatagramProtocol, TimeoutMixin):
 def create_network_node(protocol:NetworkDiscoveryProtocol):
     if protocol.state == 'NEEDS_IPS':
         protocol.state = "HAS_IPS"
-        protocol.available_shares[get_local_ip_address()] = 3025
+        protocol.available_shares["MyTestShare"] = (3025, get_local_ip_address())
         print("No available shares found.")
         MasterNode(3025, "MyTestShare", '1234')
     else:
-        print(protocol.available_shares)
-        SlaveNode(3025, get_local_ip_address())
+        for share in protocol.available_shares:
+            join_network(share, protocol.available_shares)
+
+
+def join_network(share, available_shares):
+    # @TODO bump up port by 1 and send update msg on broadcast + readin share name + only join desired
+    global wanted_networks
+    if share in wanted_networks:
+        port = available_shares[share][0]
+        master_ip = available_shares[share][1]
+        SlaveNode(port, master_ip)
 
 
 class MasterNode(Factory):
@@ -107,9 +117,6 @@ class MasterNode(Factory):
         elif mType == 'SEND_ALL':
             self.send_all_files(protocol)
 
-        elif mType == 'something':
-            print('someothermessage')
-
     def authenticate(self, msg, protocol: MasterProtocol):
         if msg.share_password == self.access_code:
             print("MASTER: Authenticated:", msg.username, msg.user_password)
@@ -141,10 +148,8 @@ class SlaveNode(ClientFactory):
         print('SLAVE: Msg received')
         if m_type == 'AUTH_REQ':
             self.authenticate(protocol)
-        if m_type == 'AUTH_OK':
+        elif m_type == 'AUTH_OK':
             self.update_all_share_files(protocol)
-        elif m_type == 'something':
-            print('someothermessage')
 
     def authenticate(self, protocol: SlaveProtocol):
         print("SLAVE: Sending Authentication Info to master")
@@ -192,10 +197,12 @@ def sender_is_valid(sender: str) -> bool:
 
 
 # Discovers all available shares on the lan
-def find_lan_shares():
-    print("Searching for Lan Shares")
-
+def find_lan_shares(share_names:list):
     global discovery_protocol
+    global wanted_networks
+
+    print("Searching for Lan Shares")
+    wanted_networks = share_names
     discovery_protocol = NetworkDiscoveryProtocol()
     server = internet.UDPServer(7999, discovery_protocol)
     server.startService()

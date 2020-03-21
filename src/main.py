@@ -4,7 +4,7 @@ import src.utilities.networking as network
 
 if __name__ == '__main__':
     # share_slave = SlaveNode(3025, '192.168.1.105')
-    network.find_lan_shares()
+    network.find_lan_shares(["ians_share"])
     # share_file = ShareFile('monitored_files/test.txt')
     # share_file.__hash__()
     # monitor_file_changes(share_slave)
