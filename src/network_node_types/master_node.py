@@ -8,7 +8,7 @@ from datetime import datetime
 from twisted.internet.protocol import Factory
 from src.protocols.master import MasterProtocol
 from src.utilities.file_manager import ShareFile
-from src.utilities.messages import AuthNeededMsg, Message, MasterUpdateMsg
+from src.utilities.messages import AuthNeededMsg, Message, MasterUpdateMsg, SeedMasterMsg
 
 
 class MasterNode(Factory):
@@ -20,15 +20,16 @@ class MasterNode(Factory):
         self.endpoints = []
         self.nxt_open_port = port
         self.users = []
-        self.tracked_files = {}
+        self.tracked_files = {}  # filename: (chunks[], chunk_ips[])
+
         self.name = share_name
-        self.uuid = share_name + "_" + datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + "_" + str(uuid.getnode())
+        # self.uuid = share_name + "_" + datetime.now().strftime("%Y-%m-%d-%H:%M:%S") + "_" + str(uuid.getnode())
         self.access_code = access_code
         self.ip = self.get_local_ip()
         self.file_directory = 'monitored_files/' + share_name + '/'
         self.broadcast_proto = broadcast_proto
 
-        self.initialize_files()
+        # self.initialize_files()
         self.open_new_port()
 
     def new_connection_made(self, protocol: MasterProtocol):
@@ -36,9 +37,9 @@ class MasterNode(Factory):
         print("MASTER: Requesting authentication")
         response = AuthNeededMsg()
         protocol.sendMessage(response)
-        self.update_available_shares()
+        self.update_broadcasted_shares()
 
-    def update_available_shares(self):
+    def update_broadcasted_shares(self):
         shares = self.broadcast_proto.available_shares
         self.nxt_open_port += 1
         self.open_new_port()
@@ -60,6 +61,8 @@ class MasterNode(Factory):
             self.authenticate(msg, protocol)
         elif mType == 'SEND_ALL':
             self.send_all_files(protocol)
+        elif mType == 'SEED_MSTR':
+            self.initialize_files(msg)
 
     def authenticate(self, msg, protocol: MasterProtocol):
         if msg.share_password == self.access_code:
@@ -73,13 +76,15 @@ class MasterNode(Factory):
     def send_all_files(self, protocol: MasterProtocol):
         print('MASTER: Gathering all files')
 
-    def initialize_files(self):
-        file_locations = glob.glob(self.file_directory + '*')
-        for file in file_locations:
-            # with open(file) as f:
-            #     print(f.read())
-            share_file = ShareFile(file)
-            share_file.__hash__()
+    def initialize_files(self, msg:SeedMasterMsg):
+        file_name = msg.file_name
+        chunks = msg.chunks
+        chunk_ips = []
+        for _ in chunks:
+            chunk_ips.append(msg.sender_ip)
+
+        self.tracked_files[file_name] = (chunks,chunk_ips)
+        print('MASTER: Tracking', self.tracked_files)
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()

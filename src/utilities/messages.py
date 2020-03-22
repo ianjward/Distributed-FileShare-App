@@ -34,11 +34,11 @@ class AuthNeededMsg(Message):
         super().__init__("AUTH_REQ")
 
 
-class PushFileMsg(Message):
-    def __init__(self):
-        super().__init__('PUSH_FILE')
-        self.file_name = None
-        self.data = None
+# class PushFileMsg(Message):
+#     def __init__(self):
+#         super().__init__('PUSH_FILE')
+#         self.file_name = None
+#         self.data = None
 
 
 class RequestMastersMsg(Message):
@@ -57,3 +57,16 @@ class MasterUpdateMsg(Message):
         super().__init__("MSTR_UPDTE")
         self.master_dict = mstr_dict
 
+
+class CheckChunksMsg(Message):
+    def __init__(self, file_name:str, chunks:[]):
+        super().__init__("CHK_CHUNK")
+        self.file_name = file_name
+        self.chunks = chunks
+
+
+class SeedMasterMsg(Message):
+    def __init__(self, file_name:str, chunks:[], mod_time:float):
+        super().__init__("SEED_MSTR")
+        self.file_name = file_name
+        self.chunks = chunks

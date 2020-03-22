@@ -1,4 +1,5 @@
 import hashlib
+import os
 import threading
 import time
 from watchdog.observers import Observer
@@ -13,6 +14,10 @@ class ShareFile:
 
     def __init__(self, file_path:str):
         self.location = file_path
+        slash_index = file_path.rindex('\\') + 1
+        self.file_name = file_path[slash_index:]
+        self.last_mod_time = os.path.getmtime(file_path)
+        self.__hash__()
 
     def __hash__(self):
         index = 0
@@ -24,9 +29,9 @@ class ShareFile:
                     break
 
                 self.sha1_hash.update(data)
-                self.chunks[index] = self.sha1_hash
+                self.chunks[index] = self.sha1_hash.hexdigest()
                 index += 1
-                print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
+                # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
 
 
 class FileWatcher(PatternMatchingEventHandler):
