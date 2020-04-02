@@ -4,12 +4,12 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.protocols.policies import TimeoutMixin
 from src.network_node_types.master_node import MasterNode
 from src.network_node_types.slave_node import SlaveNode
-from src.utilities.messages import *
+from src.network_traffic_types.messages import *
 from twisted.application import internet
 from twisted.internet import reactor
 
 
-class BroadcastProtocol(DatagramProtocol, TimeoutMixin):
+class BroadcastNode(DatagramProtocol, TimeoutMixin):
     wanted_networks = []
 
     def startProtocol(self):
@@ -96,8 +96,8 @@ class BroadcastProtocol(DatagramProtocol, TimeoutMixin):
 # Discovers all available shares on the lan
 def search_for(share_names:list):
     print("BROADCAST: Searching for Lan Shares")
-    BroadcastProtocol.wanted_networks = share_names
+    BroadcastNode.wanted_networks = share_names
 
-    discovery_protocol = BroadcastProtocol()
+    discovery_protocol = BroadcastNode()
     server = internet.UDPServer(7999, discovery_protocol)
     server.startService()

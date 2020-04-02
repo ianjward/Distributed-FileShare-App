@@ -34,13 +34,6 @@ class AuthNeededMsg(Message):
         super().__init__("AUTH_REQ")
 
 
-# class PushFileMsg(Message):
-#     def __init__(self):
-#         super().__init__('PUSH_FILE')
-#         self.file_name = None
-#         self.data = None
-
-
 class RequestMastersMsg(Message):
     def __init__(self):
         super().__init__("REQST_MSTRS")
