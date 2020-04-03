@@ -17,7 +17,7 @@ class ShareFile:
     sha1_hash = hashlib.sha1()
     BUF_SIZE = 262164  # 256kb chunks
     file_path = ''
-    chunks = {}
+    hash_chunks = {}
     addresses = {}
 
     def __init__(self, file_path: str):
@@ -36,7 +36,7 @@ class ShareFile:
                     break
 
                 self.sha1_hash.update(data)
-                self.chunks[index] = self.sha1_hash.hexdigest()
+                self.hash_chunks[index] = self.sha1_hash.hexdigest()
                 self.addresses[index] = get_local_ip()
                 index += 1
                 # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))

@@ -5,7 +5,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-from src.network_traffic_types.master_cmds import SeedFile, UpdateFile
+from src.network_traffic_types.master_cmds import UpdateFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
 from src.utilities.file_manager import ShareFile, monitor_file_changes
 
@@ -28,26 +28,9 @@ class SlaveProtocol(AMP):
 
     def initialize_files(self):
         print("SLAVE: Received auth ok")
-
-        # If first node on share, push all files to master
-        if self.master_ip == self.get_local_ip():
-            self.seed_master_files()
-        else:
-            self.update_all_share_files()
+        self.update_all_share_files()
         return {}
     AuthAccepted.responder(initialize_files)
-
-    def seed_master_files(self):
-        path_to_files = os.path.join(self.file_directory, '*')
-        file_locations = glob.glob(path_to_files)
-
-        for file in file_locations:
-            share_file = ShareFile(file)
-            self.files.append(share_file)
-
-            self.files.append(share_file)
-            print('SLAVE: Seeding Master with', share_file.file_name)
-            self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
 
     def update_all_share_files(self):
         path_to_files = os.path.join(self.file_directory, '*')
@@ -57,7 +40,11 @@ class SlaveProtocol(AMP):
             share_file = ShareFile(file)
             self.files.append(share_file)
             self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            print('SLAVE: Checking file', share_file.file_name)
+            print('SLAVE: Updating file', share_file.file_name)
+
+    def update_file(self, path):
+        print(path, 'updated')
+
 
     # @TODO figure out how to batch events
         monitor_file_changes(self)
@@ -76,6 +63,7 @@ class SlaveProtocol(AMP):
 
     def file_modified(self, event: FileModifiedEvent):
         print(event.src_path, event.event_type)
+        self.update_file(event.src_path)
 
 
 class SlaveNode(ClientFactory):
