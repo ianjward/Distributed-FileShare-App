@@ -1,5 +1,7 @@
-from twisted.internet.endpoints import TCP4ServerEndpoint
+from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint
 from twisted.protocols.amp import AMP
+from twisted.python.log import err
+
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
@@ -53,15 +55,12 @@ class MasterProtocol(AMP):
     def print_error(self, error):
         print(error)
 
-    def connection_lost(self, node, reason):
-        print("MASTER:", "Connection lost", reason)
-
 
 class MasterNode(Factory):
     protocol = MasterProtocol
+    endpoints = []
 
     def __init__(self, port: int, share_name: str, access_code: str, broadcast_proto):
-        self.endpoints = []
         self.nxt_open_port = port
         self.users = []
         self.tracked_files = {}  # filename: (chunks[], chunk_ips[])
@@ -82,6 +81,9 @@ class MasterNode(Factory):
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
+
+
+
 
 
 

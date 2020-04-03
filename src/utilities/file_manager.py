@@ -5,6 +5,7 @@ import threading
 import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
+from pathlib import Path
 
 
 class ShareFile:
@@ -13,10 +14,9 @@ class ShareFile:
     location = ''
     chunks = {}
 
-    def __init__(self, file_path:str):
+    def __init__(self, file_path: str):
         self.location = file_path
-        slash_index = file_path.rindex('\\') + 1
-        self.file_name = file_path[slash_index:]
+        self.file_name = Path(file_path).name
         self.last_mod_time = os.path.getmtime(file_path)
         self.__hash__()
 
@@ -75,7 +75,8 @@ def monitor_file_changes(slave):
 
 def start_file_monitor(slave):
     observer = Observer()
-    observer.schedule(FileWatcher(slave), 'monitored_files\\' + slave.share_name + '\\')
+    path_to_files = os.path.join('monitored_files', slave.share_name)
+    observer.schedule(FileWatcher(slave), path_to_files)
     observer.start()
 
     try:

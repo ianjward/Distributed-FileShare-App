@@ -1,13 +1,13 @@
 import glob
+import os
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
-
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.master_cmds import SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
-from src.utilities.file_manager import ShareFile, start_file_monitor
+from src.utilities.file_manager import ShareFile, monitor_file_changes
 
 
 class SlaveProtocol(AMP):
@@ -38,8 +38,8 @@ class SlaveProtocol(AMP):
     AuthAccepted.responder(initialize_files)
 
     def seed_master_files(self):
-        file_locations = glob.glob(self.file_directory + '*')
-
+        path_to_files = os.path.join(self.file_directory, '*')
+        file_locations = glob.glob(path_to_files)
         for file in file_locations:
             share_file = ShareFile(file)
 
@@ -48,7 +48,8 @@ class SlaveProtocol(AMP):
             self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
 
     def update_all_share_files(self):
-        file_locations = glob.glob(self.file_directory + '*')
+        path_to_files = os.path.join(self.file_directory, '*')
+        file_locations = glob.glob(path_to_files)
 
         for file in file_locations:
             share_file = ShareFile(file)
@@ -57,7 +58,7 @@ class SlaveProtocol(AMP):
             print('SLAVE: Checking file', share_file.file_name)
     #         protocol.sendMessage(msg)
         # @TODO figure out how to batch events
-        start_file_monitor(self)
+        monitor_file_changes(self)
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
@@ -83,7 +84,7 @@ class SlaveNode(ClientFactory):
         self.master_ip = server_ip
         self.port = port
         self.share_name = name
-        self.file_directory = 'monitored_files/' + name + '/'
+        self.file_directory = os.path.join('monitored_files', name)
         self.files = []
 
         reactor.connectTCP(server_ip, port, self)
