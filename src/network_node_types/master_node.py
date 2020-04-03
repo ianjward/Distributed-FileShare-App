@@ -5,7 +5,7 @@ import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import UpdateFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
 
@@ -49,6 +49,7 @@ class MasterProtocol(AMP):
             self.factory.tracked_files[file_name] = (hashes, (chunk_ips, file.last_mod_time))
         print('MASTER: Tracking', self.factory.tracked_files)
         return {}
+    SeedFile.responder(seed_file)
 
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
@@ -63,21 +64,21 @@ class MasterProtocol(AMP):
             self.seed_file(encoded_file, sender_ip)
 
         # Set stored file info if file is being tracked by master
-        num_stored_chunks = len(self.factory.tracked_files[file_name][1][0])
-        stored_timestamp = self.factory.tracked_files[file_name][1][1]
-        stored_hashes = self.factory.tracked_files[file_name][0]
+        # num_stored_chunks = len(self.factory.tracked_files[file_name][1][0])
+        # stored_timestamp = self.factory.tracked_files[file_name][1][1]
+        # stored_hashes = self.factory.tracked_files[file_name][0]
 
         # Check new hash against stored hash
-        while index < num_stored_chunks:
-            if stored_hashes[index] != hashes[index]:
-                print(file_name, 'stored', stored_timestamp, 'slave:', file.last_mod_time)
-                index += 1
-            # return file name,
-
-        # Add any expanded hashes
-        while index < len(hashes):
-            print(file_name, 'file expanded')
-            index += 1
+        # while index < num_stored_chunks:
+        #     if stored_hashes[index] != hashes[index]:
+        #         print(file_name, 'stored', stored_timestamp, 'slave:', file.last_mod_time)
+        #         index += 1
+        #     # return file name,
+        #
+        # # Add any expanded hashes
+        # while index < len(hashes):
+        #     print(file_name, 'file expanded')
+        #     index += 1
 
         return {}
     UpdateFile.responder(update_file)
