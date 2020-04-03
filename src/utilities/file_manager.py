@@ -6,16 +6,22 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from pathlib import Path
+import src.utilities.networking
+
+
+def get_local_ip():
+    return src.utilities.networking.get_local_ip_address()
 
 
 class ShareFile:
     sha1_hash = hashlib.sha1()
     BUF_SIZE = 262164  # 256kb chunks
-    location = ''
+    file_path = ''
     chunks = {}
+    addresses = {}
 
     def __init__(self, file_path: str):
-        self.location = file_path
+        self.file_path = file_path
         self.file_name = Path(file_path).name
         self.last_mod_time = os.path.getmtime(file_path)
         self.__hash__()
@@ -23,7 +29,7 @@ class ShareFile:
     def __hash__(self):
         index = 0
         # Read in a file 64kb at a time hashing+saving each chunk
-        with open(self.location, 'rb') as file:
+        with open(self.file_path, 'rb') as file:
             while True:
                 data = file.read(self.BUF_SIZE)
                 if not data:
@@ -31,6 +37,7 @@ class ShareFile:
 
                 self.sha1_hash.update(data)
                 self.chunks[index] = self.sha1_hash.hexdigest()
+                self.addresses[index] = get_local_ip()
                 index += 1
                 # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
 

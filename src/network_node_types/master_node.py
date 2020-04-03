@@ -57,10 +57,9 @@ class MasterProtocol(AMP):
         chunks = file.chunks
         chunk_ips = []
 
-        print(chunks)
-        # for _ in chunks:
-        #     print(_)
-
+        for chunk in chunks:
+            print(chunk)
+        return {}
     UpdateFile.responder(update_file)
 
     def print_error(self, error):
