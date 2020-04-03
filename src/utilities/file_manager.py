@@ -50,7 +50,6 @@ class FileWatcher(PatternMatchingEventHandler):
         self.share_node = share
 
     def process(self, event):
-        print(event.event_type)
         if event.event_type == 'created':
             self.share_node.file_created(event)
 

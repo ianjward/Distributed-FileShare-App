@@ -4,7 +4,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.protocols.policies import TimeoutMixin
 from src.network_node_types.master_node import MasterNode
 from src.network_node_types.slave_node import SlaveNode
-from src.network_traffic_types.messages import *
+from src.network_traffic_types.broadcast_msgs import *
 from twisted.application import internet
 from twisted.internet import reactor
 
@@ -55,7 +55,6 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
         self.state = "HAS_IPS"
 
     def join_network_as_slave(self, share_name, available_shares):
-        # @TODO bump up Master port by 1, have master open new port, and send dictionary update on broadcast
         # global wanted_networks
         if share_name in self.wanted_networks:
             port = available_shares[share_name][0]

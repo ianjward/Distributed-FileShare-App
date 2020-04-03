@@ -1,14 +1,13 @@
 import glob
-import pickle
-
 from twisted.protocols.amp import AMP
+from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
+
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-
 from src.network_traffic_types.master_cmds import SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
-from src.utilities.file_manager import ShareFile
+from src.utilities.file_manager import ShareFile, start_file_monitor
 
 
 class SlaveProtocol(AMP):
@@ -34,7 +33,7 @@ class SlaveProtocol(AMP):
         if self.master_ip == self.get_local_ip():
             self.seed_master_files()
 
-        # self.update_all_share_files()
+        self.update_all_share_files()
         return {}
     AuthAccepted.responder(initialize_files)
 
@@ -48,11 +47,33 @@ class SlaveProtocol(AMP):
             print('SLAVE: Seeding Master with', share_file.file_name)
             self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
 
+    def update_all_share_files(self):
+        file_locations = glob.glob(self.file_directory + '*')
+
+        for file in file_locations:
+            share_file = ShareFile(file)
+            self.files.append(share_file)
+    #         msg = CheckChunksMsg(share_file.file_name, share_file.chunks)
+            print('SLAVE: Checking file', share_file.file_name)
+    #         protocol.sendMessage(msg)
+        # @TODO figure out how to batch events
+        start_file_monitor(self)
+
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
+
+    def file_created(self, event: FileCreatedEvent):
+        print(event.src_path, event.event_type)
+
+    def file_deleted(self, event: FileDeletedEvent):
+        print(event.src_path, event.event_type)
+
+    def file_modified(self, event: FileModifiedEvent):
+        print(event.src_path, event.event_type)
+
 
 
 class SlaveNode(ClientFactory):
@@ -67,29 +88,4 @@ class SlaveNode(ClientFactory):
 
         reactor.connectTCP(server_ip, port, self)
 
-
-
-
-
-
-    # def update_all_share_files(self, protocol: SlaveProtocol):
-    #     file_locations = glob.glob(self.file_directory + '*')
-    #
-    #     for file in file_locations:
-    #         share_file = ShareFile(file)
-    #         self.files.append(share_file)
-    #         msg = CheckChunksMsg(share_file.file_name, share_file.chunks)
-    #         print('SLAVE: Checking file', share_file.file_name)
-    #         protocol.sendMessage(msg)
-    #     start_file_monitor(self)
-    #
-    # def file_created(self, event: FileCreatedEvent):
-    #     print(event.src_path, event.event_type)
-    #
-    # def file_deleted(self, event: FileDeletedEvent):
-    #     print(event.src_path, event.event_type)
-    #
-    # def file_modified(self, event: FileModifiedEvent):
-    #     print(event.src_path, event.event_type)
-    #
 
