@@ -1,12 +1,11 @@
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint
 from twisted.protocols.amp import AMP
 from twisted.python.log import err
-
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import SeedFile
+from src.network_traffic_types.master_cmds import SeedFile, UpdateFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
 
@@ -47,10 +46,22 @@ class MasterProtocol(AMP):
 
         for _ in chunks:
             chunk_ips.append(sender_ip)
-            self.factory.tracked_files[file_name] = (chunks,chunk_ips)
+            self.factory.tracked_files[file_name] = (chunks, chunk_ips)
         print('MASTER: Tracking', self.factory.tracked_files)
         return {}
     SeedFile.responder(seed_file)
+
+    def update_file(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        file_name = file.file_name
+        chunks = file.chunks
+        chunk_ips = []
+
+        print(chunks)
+        # for _ in chunks:
+        #     print(_)
+
+    UpdateFile.responder(update_file)
 
     def print_error(self, error):
         print(error)
