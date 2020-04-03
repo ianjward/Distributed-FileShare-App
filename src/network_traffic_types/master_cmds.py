@@ -7,3 +7,6 @@ class Sum(Command):
     response = [('total'.encode(), Integer())]
 
 
+class SeedFile(Command):
+    arguments = [('encoded_file'.encode(), String()),
+                 ('sender_ip'.encode(), Unicode())]

@@ -48,8 +48,16 @@ class MasterProtocol(AMP):
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
             self.callRemote(AuthAccepted)
 
-    def seed_file(self, file):
-        print(decode_file(file).location)
+    def seed_file(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        file_name = file.file_name
+        chunks = file.chunks
+        chunk_ips = []
+
+        for _ in chunks:
+            chunk_ips.append(sender_ip)
+            self.tracked_files[file_name] = (chunks,chunk_ips)
+        print('MASTER: Tracking', self.tracked_files)
         return {}
     SeedFile.responder(seed_file)
 
@@ -84,41 +92,17 @@ class MasterNode(Factory):
         return src.utilities.networking.get_local_ip_address()
 
 
-    # def receive_msg(self, msg: Message, protocol: MasterProtocol):
-    #     mType = msg.mType
-    #     print("MASTER:", "Msg received", mType)
-    #
-    #     if mType == 'AUTH_SYN':
-    #         self.authenticate(msg, protocol)
+
     #     elif mType == 'SEND_ALL':
     #         self.send_all_files(protocol)
-    #     elif mType == 'SEED_MSTR':
-    #         self.initialize_files(msg)
     #
-    # def authenticate(self, msg, protocol: MasterProtocol):
-    #     if msg.share_password == self.access_code:
-    #         print("MASTER: Authenticated:", msg.username, msg.user_password)
-    #         response = Message("AUTH_OK")
-    #         protocol.sendMessage(response)
     #
     # def connection_lost(self, node, reason):
     #     print("MASTER:", "Connection lost", reason)
     #
     # def send_all_files(self, protocol: MasterProtocol):
     #     print('MASTER: Gathering all files')
-    #
-    # def initialize_files(self, msg:SeedMasterMsg):
-    #     file_name = msg.file_name
-    #     print(file_name)
-    #     chunks = msg.chunks
-    #     chunk_ips = []
-    #
-    #     for _ in chunks:
-    #         chunk_ips.append(msg.sender_ip)
-    #
-    #     self.tracked_files[file_name] = (chunks,chunk_ips)
-    #     print('MASTER: Tracking', self.tracked_files)
-    #
+
 
 
 

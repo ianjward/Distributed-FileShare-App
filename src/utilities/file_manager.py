@@ -1,5 +1,6 @@
 import hashlib
 import os
+import pickle
 import threading
 import time
 from watchdog.observers import Observer
@@ -32,6 +33,13 @@ class ShareFile:
                 self.chunks[index] = self.sha1_hash.hexdigest()
                 index += 1
                 # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
+
+    def encode(self):
+        return pickle.dumps(self)
+
+
+def decode_file(file:ShareFile):
+    return pickle.loads(file)
 
 
 class FileWatcher(PatternMatchingEventHandler):

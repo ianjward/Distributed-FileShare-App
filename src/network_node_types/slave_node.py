@@ -1,8 +1,12 @@
 import glob
+import pickle
+
 from twisted.protocols.amp import AMP
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
+
+from src.network_traffic_types.master_cmds import SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
 from src.utilities.file_manager import ShareFile
 
@@ -39,10 +43,10 @@ class SlaveProtocol(AMP):
 
         for file in file_locations:
             share_file = ShareFile(file)
+
             self.files.append(share_file)
             print('SLAVE: Seeding Master with', share_file.file_name)
-            # msg = SeedMasterMsg(share_file.file_name, share_file.chunks, share_file.last_mod_time)
-            # protocol.sendMessage(msg)
+            self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
