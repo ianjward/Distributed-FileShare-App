@@ -78,7 +78,7 @@ class SlaveProtocol(AMP):
         # Connect to node with chunk if there are changes to make
         if bool(ips):
             print(ips[0], file.file_name)
-            # deferred = create_ftp_client(ips[0], 8000)
+            deferred = create_ftp_client(ips[0], 8000)
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)

@@ -6,12 +6,12 @@ from twisted.protocols.amp import AMP
 
 class TransferServerProtocol(AMP):
     def connectionMade(self):
-        print("FTP SERVER: Created")
+        print("FTP SERVER: Connected to client")
 
 
 class TransferClientProtocol(AMP):
     def connectionMade(self):
-        print("FTP CLIENT: Created")
+        print("FTP CLIENT: Connected to server")
 
 
 class FTPServer(Factory):
@@ -19,8 +19,9 @@ class FTPServer(Factory):
 
 
 def create_ftp_client(ip: str, port: int):
-    endpoint = TCP4ClientEndpoint(reactor, ip, port)
-    return connectProtocol(endpoint, FTPClient())
+    reactor.connectTCP(ip, port, FTPClient())
+    # endpoint = TCP4ClientEndpoint(reactor, ip, port)
+    # return connectProtocol(endpoint, FTPClient())
 
 
 def create_ftp_server(port: int):
