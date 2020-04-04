@@ -55,10 +55,12 @@ class MasterProtocol(AMP):
         file = decode_file(encoded_file)
         file_name = file.file_name
         hashes = file.hash_chunks
-        chunks_to_update = []
+        chunks_to_update = ''
         i = 0
+        print('updating', file_name)
 
         if file_name not in self.factory.tracked_files:
+            print('seeding new')
             self.seed_file(encoded_file, sender_ip)
 
         # Set stored file info if file is being tracked by master
@@ -69,19 +71,21 @@ class MasterProtocol(AMP):
 
         # Check new hash against stored hash
         while i < num_stored_chunks:
-            if stored_hashes[i] != hashes[i]:
-                stored_is_current = stored_timestamp[i] > file.last_mod_time
+            stored_is_current = stored_timestamp[i] > file.last_mod_time
+            stored_matches_file = stored_ips[i] == sender_ip
 
+            # Choose latest file data to store
+            if stored_hashes[i] != hashes[i]:
                 stored_timestamp[i] = stored_timestamp[i] if stored_is_current else file.last_mod_time
                 stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
                 stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
-                chunks_to_update.append(stored_ips[i])
-                print(file_name, 'stored', stored_timestamp, 'vs stored:', file.last_mod_time, 'is', stored_timestamp[i])
-                i += 1
+
+            chunks_to_update += 'current' if stored_is_current or stored_matches_file else stored_ips[i]
+            i += 1
 
         # Add any expanded hashes
         while i < len(hashes):
-            chunks_to_update.append(i)
+            chunks_to_update += i
             print(file_name, 'file expanded')
             i += 1
 

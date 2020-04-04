@@ -56,8 +56,8 @@ class SlaveProtocol(AMP):
             update.addCallback(self.update_file)
             print('SLAVE: Updating file', share_file.file_name)
 
-    def update_file(self, path):
-        print(path, 'updated')
+    def update_file(self, updated_files):
+        print(updated_files)
 
     # @TODO figure out how to batch events
         monitor_file_changes(self)
