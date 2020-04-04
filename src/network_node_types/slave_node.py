@@ -28,6 +28,8 @@ class SlaveProtocol(AMP):
 
     def initialize_files(self):
         print("SLAVE: Received auth ok")
+
+        # Seed files the master is tracking if master is at same ip
         if self.get_local_ip() == self.master_ip:
             path_to_files = os.path.join(self.file_directory, '*')
             file_locations = glob.glob(path_to_files)
@@ -50,12 +52,12 @@ class SlaveProtocol(AMP):
         for file in file_locations:
             share_file = ShareFile(file)
             self.files.append(share_file)
-            self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.update_file)
             print('SLAVE: Updating file', share_file.file_name)
 
     def update_file(self, path):
         print(path, 'updated')
-
 
     # @TODO figure out how to batch events
         monitor_file_changes(self)
