@@ -1,4 +1,5 @@
 from twisted.internet import reactor
+from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.protocol import ClientFactory, Factory
 from twisted.protocols.amp import AMP
 
@@ -16,8 +17,10 @@ class TransferClientProtocol(AMP):
 class FTPServer(Factory):
     protocol = TransferServerProtocol
 
-    def __init__(self, port: int):
-        new_endpoint = reactor.listenTCP(port, self)
+
+def create_ftp_server(port: int):
+    new_endpoint = TCP4ServerEndpoint(reactor, port)
+    return new_endpoint.listen(FTPServer())
 
 
 class FTPClient(ClientFactory):

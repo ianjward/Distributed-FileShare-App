@@ -5,8 +5,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-
-from src.network_traffic_types.ftp_transfer import FTPServer
+from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
@@ -66,9 +65,13 @@ class SlaveProtocol(AMP):
         monitor_file_changes(self)
 
     def open_transfer_server(self):
-        FTPServer(8000)
+        deferred = create_ftp_server(8000)
+        deferred.addCallback(self.ensure_created)
         return {}
     OpenTransferServer.responder(open_transfer_server)
+
+    def ensure_created(self, _):
+        return 'Intentional placeholder callback method'
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)

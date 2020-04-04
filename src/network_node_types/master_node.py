@@ -43,7 +43,7 @@ class MasterProtocol(AMP):
             port = creds['sender_port']
             ip = creds['sender_ip']
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
-            self.factory.ip_to_port_map[ip] = port
+            self.factory.endpoints[ip] = self
             self.callRemote(AuthAccepted)
 
     def seed_file(self, encoded_file, sender_ip):
@@ -103,9 +103,10 @@ class MasterProtocol(AMP):
 
         print('altered',altered_ips)
         for ip in altered_ips:
-            port = self.factory.ip_to_port_map[ip]
-            connection = self.factory.endpoints[port]
-            # connection.callRemote(OpenTransferServer)
+            # port = self.factory.ip_to_port_map[ip]
+            print(self.factory.endpoints)
+            connection = self.factory.endpoints[ip]
+            connection.callRemote(OpenTransferServer)
         return {'update_ips': chunks_to_update}
     UpdateFile.responder(update_file)
 
@@ -134,8 +135,10 @@ class MasterNode(Factory):
         # @TODO move to endpoints again
 
     def open_new_port(self):
-        new_endpoint = reactor.listenTCP(self.nxt_open_port, self)
-        self.endpoints[self.nxt_open_port] = new_endpoint
+        new_endpoint = TCP4ServerEndpoint(reactor, self.nxt_open_port)
+        new_endpoint.listen(self)
+        # new_endpoint = reactor.listenTCP(self.nxt_open_port, self)
+        # self.endpoints[self.nxt_open_port] = new_endpoint
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
