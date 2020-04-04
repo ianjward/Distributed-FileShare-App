@@ -1,11 +1,15 @@
 import glob
 import os
+
+from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
 import src.utilities.networking
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientFactory
-from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, create_ftp_client
+from src.network_traffic_types.ftp_commands import ServeFile
+from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, FTPClientCreator, \
+    TransferClientProtocol
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
@@ -63,22 +67,45 @@ class SlaveProtocol(AMP):
         # @TODO figure out how to batch events
         monitor_file_changes(self)
 
-    def update_file(self, updated_files, file:ShareFile):
+    def update_file(self, updated_files, file: ShareFile):
         file_statuses = updated_files['update_ips']
         statuses = file_statuses.split(' ')
-        ips = {}
+        chunks = {}
+        ips = set()
         i = 0
 
         # Sort uptodate files from outofdate files
         for status in statuses:
             if status != 'current' and status != '':
-                ips[i] = status
+                chunks[i] = status
                 i += 1
 
-        # Connect to node with chunk if there are changes to make
-        if bool(ips):
-            print(ips[0], file.file_name)
-            deferred = create_ftp_client(ips[0], 8000)
+        # Connect to nodes with chunk if there are changes to make
+        if bool(chunks):
+            # Get unique set of ips to connect to for updates
+            for value in chunks.values():
+                ips.add(value)
+            # Connect to each needed update node
+            for ip in ips:
+                client = FTPClientCreator(ip, 8000)
+                # d = defer.Deferred()
+                # d.addCallback(callback_func)
+                initiate_connection = client.start_connect()
+                print(initiate_connection)
+                # print(initiate_connection)
+                deferLater(reactor, 1, self.test, client, file)
+
+                # initiate_connection.addCallback(self.test())
+                # initiate_connection.addErrback(self.error())
+
+                # client.callRemote(ServeFile, encoded_file=file.encode())
+
+    def test(self, client, file):
+        print(client.factory.distant_end)
+        client.callRemote(ServeFile, encoded_file=file.encode())
+
+    def error(self):
+        print('erree')
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
@@ -103,7 +130,7 @@ class SlaveProtocol(AMP):
 
     def file_modified(self, event: FileModifiedEvent):
         print(event.src_path, event.event_type)
-        self.update_file(event.src_path)
+        # self.update_file(event.src_path)
 
 
 class SlaveNode(ClientFactory):
