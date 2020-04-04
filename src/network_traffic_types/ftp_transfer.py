@@ -15,6 +15,7 @@ class TransferServerProtocol(AMP):
     def serve_file(self, encoded_file):
         file = decode_file(encoded_file)
         print('servingfile')
+        return {}
 
     ServeFile.responder(serve_file)
 
@@ -44,12 +45,7 @@ class FTPClientCreator:
 
     def start_connect(self):
         self.endpoint = TCP4ClientEndpoint(reactor, self.ip, self.port)
-        d = self.endpoint.connect(self.factory)
-        return d
-
-    def get_connection(self):
-        print('here')
-        return self.factory.distant_end
+        return self.endpoint.connect(self.factory)
 
 
 def create_ftp_server(port: int):

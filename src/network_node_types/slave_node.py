@@ -88,24 +88,12 @@ class SlaveProtocol(AMP):
             # Connect to each needed update node
             for ip in ips:
                 client = FTPClientCreator(ip, 8000)
-                # d = defer.Deferred()
-                # d.addCallback(callback_func)
-                initiate_connection = client.start_connect()
-                print(initiate_connection)
-                # print(initiate_connection)
+                client.start_connect()
                 deferLater(reactor, 1, self.test, client, file)
-
-                # initiate_connection.addCallback(self.test())
-                # initiate_connection.addErrback(self.error())
-
-                # client.callRemote(ServeFile, encoded_file=file.encode())
 
     def test(self, client, file):
         print(client.factory.distant_end)
-        client.callRemote(ServeFile, encoded_file=file.encode())
-
-    def error(self):
-        print('erree')
+        client.factory.distant_end.callRemote(ServeFile, encoded_file=file.encode())
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
