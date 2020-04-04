@@ -10,6 +10,11 @@ from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
 
 
+def cmp_floats(a: float, b: float) -> bool:
+    epsilon = .00001
+    return True if abs(a - b) < epsilon else False
+
+
 class MasterProtocol(AMP):
     def connectionMade(self):
         print("MASTER: New connection detected!")
@@ -43,10 +48,12 @@ class MasterProtocol(AMP):
         file_name = file.file_name
         hashes = file.hash_chunks
         chunk_ips = []
+        mod_times = []
 
         for _ in hashes:
             chunk_ips.append(sender_ip)
-            self.factory.tracked_files[file_name] = (hashes, (chunk_ips, file.last_mod_time))
+            mod_times.append(file.last_mod_time)
+            self.factory.tracked_files[file_name] = (hashes, (chunk_ips, mod_times))
         print('MASTER: Tracking', self.factory.tracked_files)
         return {}
     SeedFile.responder(seed_file)
@@ -57,10 +64,8 @@ class MasterProtocol(AMP):
         hashes = file.hash_chunks
         chunks_to_update = ''
         i = 0
-        print('updating', file_name)
 
         if file_name not in self.factory.tracked_files:
-            print('seeding new')
             self.seed_file(encoded_file, sender_ip)
 
         # Set stored file info if file is being tracked by master
@@ -71,7 +76,7 @@ class MasterProtocol(AMP):
 
         # Check new hash against stored hash
         while i < num_stored_chunks:
-            stored_is_current = stored_timestamp[i] > file.last_mod_time
+            stored_is_current = cmp_floats(stored_timestamp[i], file.last_mod_time)
             stored_matches_file = stored_ips[i] == sender_ip
 
             # Choose latest file data to store
@@ -80,7 +85,7 @@ class MasterProtocol(AMP):
                 stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
                 stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
 
-            chunks_to_update += 'current' if stored_is_current or stored_matches_file else stored_ips[i]
+            chunks_to_update += 'current ' if stored_is_current or stored_matches_file else stored_ips[i] + ' '
             i += 1
 
         # Add any expanded hashes
@@ -121,6 +126,7 @@ class MasterNode(Factory):
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
+
 
 
 
