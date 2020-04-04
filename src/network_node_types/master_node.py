@@ -7,7 +7,7 @@ from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 
 
 def cmp_floats(a: float, b: float) -> bool:
@@ -43,7 +43,7 @@ class MasterProtocol(AMP):
             port = creds['sender_port']
             ip = creds['sender_ip']
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
-            self.factory.endpoints[port] = ((self.factory.endpoints[port])[0], ip)
+            self.factory.ip_to_port_map[ip] = port
             self.callRemote(AuthAccepted)
 
     def seed_file(self, encoded_file, sender_ip):
@@ -53,6 +53,7 @@ class MasterProtocol(AMP):
         chunk_ips = []
         mod_times = []
 
+        # Start tracking each hash in the file
         for _ in hashes:
             chunk_ips.append(sender_ip)
             mod_times.append(file.last_mod_time)
@@ -68,6 +69,7 @@ class MasterProtocol(AMP):
         chunks_to_update = ''
         i = 0
 
+        # Track any files master has never seen before
         if file_name not in self.factory.tracked_files:
             self.seed_file(encoded_file, sender_ip)
 
@@ -81,6 +83,7 @@ class MasterProtocol(AMP):
         while i < num_stored_chunks:
             stored_is_current = cmp_floats(stored_timestamp[i], file.last_mod_time)
             stored_matches_file = stored_ips[i] == sender_ip
+            altered_ips = set()
 
             # Choose latest file data to store
             if stored_hashes[i] != hashes[i]:
@@ -88,16 +91,21 @@ class MasterProtocol(AMP):
                 stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
                 stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
 
-            chunks_to_update += 'current ' if stored_is_current or stored_matches_file else stored_ips[i] + ' '
+            # Append current status to return string if chunk is uptodate
+            if stored_is_current or stored_matches_file:
+                chunks_to_update += 'current '
+
+            # Append ip with the uptodate chunk if file is outofdate
+            else:
+                chunks_to_update += stored_ips[i] + ' '
+                altered_ips.add(stored_ips[i])
             i += 1
 
-        # Add any expanded hashes
-        # while i < len(hashes):
-        #     chunks_to_update += i
-        #     print(file_name, 'file expanded')
-        #     i += 1
-        #     prep_ftp = self.factory.callRemote(AuthAccepted)
-        print(self.factory.endpoints)
+        print('altered',altered_ips)
+        for ip in altered_ips:
+            port = self.factory.ip_to_port_map[ip]
+            connection = self.factory.endpoints[port]
+            # connection.callRemote(OpenTransferServer)
         return {'update_ips': chunks_to_update}
     UpdateFile.responder(update_file)
 
@@ -108,6 +116,7 @@ class MasterProtocol(AMP):
 class MasterNode(Factory):
     protocol = MasterProtocol
     endpoints = {}
+    ip_to_port_map = {}
 
     def __init__(self, port: int, share_name: str, access_code: str, broadcast_proto):
         self.nxt_open_port = port
@@ -126,7 +135,7 @@ class MasterNode(Factory):
 
     def open_new_port(self):
         new_endpoint = reactor.listenTCP(self.nxt_open_port, self)
-        self.endpoints[self.nxt_open_port] = (new_endpoint, '')
+        self.endpoints[self.nxt_open_port] = new_endpoint
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
