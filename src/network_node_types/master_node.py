@@ -101,9 +101,7 @@ class MasterProtocol(AMP):
                 altered_ips.add(stored_ips[i])
             i += 1
 
-        print('altered',altered_ips)
         for ip in altered_ips:
-            # port = self.factory.ip_to_port_map[ip]
             print(self.factory.endpoints)
             connection = self.factory.endpoints[ip]
             connection.callRemote(OpenTransferServer)
@@ -132,13 +130,10 @@ class MasterNode(Factory):
         self.broadcast_proto = broadcast_proto
         print("MASTER: Started a share on ", self.ip, ":", port)
         self.open_new_port()
-        # @TODO move to endpoints again
 
     def open_new_port(self):
         new_endpoint = TCP4ServerEndpoint(reactor, self.nxt_open_port)
         new_endpoint.listen(self)
-        # new_endpoint = reactor.listenTCP(self.nxt_open_port, self)
-        # self.endpoints[self.nxt_open_port] = new_endpoint
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()

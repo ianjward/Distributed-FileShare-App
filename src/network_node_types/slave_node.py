@@ -5,7 +5,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server
+from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, create_ftp_client
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
@@ -18,6 +18,7 @@ class SlaveProtocol(AMP):
         self.share_name = self.factory.share_name
         self.file_directory = self.factory.file_directory
         self.files = self.factory.files
+        self.open_transfer_server()
         print("SLAVE: Talking to Master at", self.master_ip, ':', self.factory.port)
 
     def authenticate(self):
@@ -59,19 +60,34 @@ class SlaveProtocol(AMP):
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
 
-    def update_file(self, updated_files, file:ShareFile):
-        print(updated_files, file.file_name)
         # @TODO figure out how to batch events
         monitor_file_changes(self)
 
+    def update_file(self, updated_files, file:ShareFile):
+        file_statuses = updated_files['update_ips']
+        statuses = file_statuses.split(' ')
+        ips = {}
+        i = 0
+
+        # Sort uptodate files from outofdate files
+        for status in statuses:
+            if status != 'current' and status != '':
+                ips[i] = status
+                i += 1
+
+        # Connect to node with chunk if there are changes to make
+        if bool(ips):
+            print(ips[0], file.file_name)
+            # deferred = create_ftp_client(ips[0], 8000)
+
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
-        deferred.addCallback(self.ensure_created)
+        # deferred.addCallback(self.ensure_created)
         return {}
     OpenTransferServer.responder(open_transfer_server)
 
-    def ensure_created(self, _):
-        return 'Intentional placeholder callback method'
+    # def ensure_created(self, _):
+    #     return 'Intentional placeholder callback method'
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)

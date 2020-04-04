@@ -19,3 +19,4 @@ class AuthAccepted(Command):
 class OpenTransferServer(Command):
     arguments = []
     # response = ['opened_status', Boolean()]
+
