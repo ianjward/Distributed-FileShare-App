@@ -40,7 +40,10 @@ class MasterProtocol(AMP):
 
     def check_creds(self, creds:dict):
         if creds['share_password'] == self.factory.access_code:
+            port = creds['sender_port']
+            ip = creds['sender_ip']
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
+            self.factory.endpoints[port] = ((self.factory.endpoints[port])[0], ip)
             self.callRemote(AuthAccepted)
 
     def seed_file(self, encoded_file, sender_ip):
@@ -89,11 +92,12 @@ class MasterProtocol(AMP):
             i += 1
 
         # Add any expanded hashes
-        while i < len(hashes):
-            chunks_to_update += i
-            print(file_name, 'file expanded')
-            i += 1
-
+        # while i < len(hashes):
+        #     chunks_to_update += i
+        #     print(file_name, 'file expanded')
+        #     i += 1
+        #     prep_ftp = self.factory.callRemote(AuthAccepted)
+        print(self.factory.endpoints)
         return {'update_ips': chunks_to_update}
     UpdateFile.responder(update_file)
 
@@ -103,7 +107,7 @@ class MasterProtocol(AMP):
 
 class MasterNode(Factory):
     protocol = MasterProtocol
-    endpoints = []
+    endpoints = {}
 
     def __init__(self, port: int, share_name: str, access_code: str, broadcast_proto):
         self.nxt_open_port = port
@@ -122,7 +126,7 @@ class MasterNode(Factory):
 
     def open_new_port(self):
         new_endpoint = reactor.listenTCP(self.nxt_open_port, self)
-        self.endpoints.insert(self.nxt_open_port, new_endpoint)  # Need to do after authentication
+        self.endpoints[self.nxt_open_port] = (new_endpoint, '')
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()

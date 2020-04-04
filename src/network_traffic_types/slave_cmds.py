@@ -1,4 +1,4 @@
-from twisted.protocols.amp import AMP, Command, Unicode, String, Integer, Float
+from twisted.protocols.amp import AMP, Command, Unicode, String, Integer, Float, Boolean
 
 
 class RequestAuth(Command):
@@ -6,9 +6,16 @@ class RequestAuth(Command):
     response = [
         ('share_password'.encode(), Unicode()),
         ('username'.encode(), Unicode()),
-        ('user_password'.encode(), Unicode())]
+        ('user_password'.encode(), Unicode()),
+        ('sender_ip'.encode(), Unicode()),
+        ('sender_port'.encode(), Integer())]
 
 
 class AuthAccepted(Command):
     arguments = []
     response = []
+
+
+class OpenTransferServer(Command):
+    arguments = []
+    # response = ['opened_status', Boolean()]

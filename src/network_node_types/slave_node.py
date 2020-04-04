@@ -5,8 +5,10 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
+
+from src.network_traffic_types.ftp_transfer import FTPServer
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
 
 
@@ -23,7 +25,9 @@ class SlaveProtocol(AMP):
         print("SLAVE: Sending authentication info to master")
         return {'share_password': '1234',
                 'username': 'linuxuser',
-                'user_password': 'supersecretpassword'}
+                'user_password': 'supersecretpassword',
+                'sender_ip': self.get_local_ip(),
+                'sender_port': self.port}
     RequestAuth.responder(authenticate)
 
     def initialize_files(self):
@@ -53,14 +57,18 @@ class SlaveProtocol(AMP):
             share_file = ShareFile(file)
             self.files.append(share_file)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.update_file)
+            update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
 
-    def update_file(self, updated_files):
-        print(updated_files)
-
-    # @TODO figure out how to batch events
+    def update_file(self, updated_files, file:ShareFile):
+        print(updated_files, file.file_name)
+        # @TODO figure out how to batch events
         monitor_file_changes(self)
+
+    def open_transfer_server(self):
+        FTPServer(8000)
+        return {}
+    OpenTransferServer.responder(open_transfer_server)
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
