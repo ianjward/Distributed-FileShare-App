@@ -13,7 +13,7 @@ class TransferServerProtocol(AMP):
 
     def serve_file(self, encoded_file, chunk_needed):
         file = decode_file(encoded_file)
-        print('servingfile', file.file_name, chunk_needed)
+        print('FTP SERVER: Serving file', file.file_name, 'chunk:', chunk_needed)
         updated_chunk = file.get_chunk(chunk_needed)
         return {'chunk': updated_chunk}
     ServeFile.responder(serve_file)

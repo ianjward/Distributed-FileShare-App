@@ -16,7 +16,7 @@ def get_local_ip():
 class ShareFile:
     sha1_hash = hashlib.sha1()
     # BUF_SIZE = 262164  # 256kb chunks
-    BUF_SIZE = 65536  # 60kb chunks to avoid amp limit for v1
+    BUF_SIZE = 60000  # 60kb chunks to avoid amp limit for v1
     file_path = ''
     hash_chunks = {}
     addresses = {}
@@ -46,14 +46,7 @@ class ShareFile:
         return pickle.dumps(self)
 
     def get_chunk(self, chunk_index):
-        # indices_needed = []
-        #
-        # # Parse all needed chunk indices
-        # for indice in range(len(chunk_indexes)):
-        #     if chunk_indexes[indice] == '1':
-        #         indices_needed.append(indice)
-
-        # Read-in and save chunk data
+        # Seek and return chunk data
         with open(self.file_path, 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
