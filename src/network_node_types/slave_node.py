@@ -85,15 +85,31 @@ class SlaveProtocol(AMP):
             # Get unique set of ips to connect to for updates
             for value in chunks.values():
                 ips.add(value)
+
             # Connect to each needed update node
             for ip in ips:
                 client = FTPClientCreator(ip, 8000)
                 client.start_connect()
-                deferLater(reactor, 1, self.test, client, file)
+                deferLater(reactor, 1, self.update_chunks, client, chunks, ip, 0, file)
 
-    def test(self, client, file):
-        print(client.factory.distant_end)
-        client.factory.distant_end.callRemote(ServeFile, encoded_file=file.encode())
+    def update_chunks(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
+        file_server = client.factory.distant_end
+
+        if file_server is None and attempts < 5:
+            client.start_connect()
+            attempts += 1
+            deferLater(reactor, 1, self.update_chunks, client, chunks, ip, attempts, file)
+
+        if file_server is not None:
+            chunks_needed = ''
+            for key, value in chunks.items():
+                chunks_needed += '1' if value == ip else '0'
+
+            print(chunks_needed)
+            file_server.callRemote(ServeFile, encoded_file=file.encode(), chunks_needed=chunks_needed)
+
+        if attempts > 5:
+            print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)

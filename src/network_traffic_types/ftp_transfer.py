@@ -12,9 +12,9 @@ class TransferServerProtocol(AMP):
         self.factory.distant_end = self
         print("FTP SERVER: Connected to client")
 
-    def serve_file(self, encoded_file):
+    def serve_file(self, encoded_file, chunks_needed: str):
         file = decode_file(encoded_file)
-        print('servingfile')
+        print('servingfile', file.file_name)
         return {}
 
     ServeFile.responder(serve_file)
