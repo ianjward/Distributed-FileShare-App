@@ -94,30 +94,35 @@ class SlaveProtocol(AMP):
             for ip in ips:
                 client = FTPClientCreator(ip, 8000)
                 client.start_connect()
-                deferLater(reactor, 1, self.update_chunks, client, chunks, ip, 0, file)
+                deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)
 
-    def update_chunks(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
+    def connect_to_ftp(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
         file_server = client.factory.distant_end
 
         # Attempt to reconnect to ftp server
         if file_server is None and attempts < 5:
             client.start_connect()
             attempts += 1
-            deferLater(reactor, 1, self.update_chunks, client, chunks, ip, attempts, file)
+            deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, attempts, file)
 
         # Update chunks w/ ftp server
         if file_server is not None:
-            indices_needed = ''
-            for key, value in chunks.items():
-                indices_needed += '1' if value == ip else '0'
-
-            file_server.callRemote(ServeFile, encoded_file=file.encode(), chunks_needed=indices_needed)
+            self.update_chunks(file_server, chunks, ip, file)
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
         self.updating_file = False
+
+    def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
+        for key, value in chunks.items():
+            if value == ip:
+                updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
+                updated_chunk.addCallback(self.write_chunks)
+
+    def write_chunks(self, message:dict):
+        print("writing chunks")
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)

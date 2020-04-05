@@ -20,7 +20,6 @@ class ShareFile:
     file_path = ''
     hash_chunks = {}
     addresses = {}
-    chunk_data = {}
 
     def __init__(self, file_path: str):
         self.file_path = file_path
@@ -30,7 +29,7 @@ class ShareFile:
 
     def __hash__(self):
         index = 0
-        # Read in a file 64kb at a time hashing+saving each chunk
+        # Read in a file 60kb at a time hashing+saving each chunk
         with open(self.file_path, 'rb') as file:
             while True:
                 data = file.read(self.BUF_SIZE)
@@ -46,22 +45,18 @@ class ShareFile:
     def encode(self):
         return pickle.dumps(self)
 
-    def get_chunks(self, chunk_indexes):
-        indices_needed = []
-
-        # Parse all needed chunk indices
-        for indice in range(len(chunk_indexes)):
-            if chunk_indexes[indice] == '1':
-                indices_needed.append(indice)
+    def get_chunk(self, chunk_index):
+        # indices_needed = []
+        #
+        # # Parse all needed chunk indices
+        # for indice in range(len(chunk_indexes)):
+        #     if chunk_indexes[indice] == '1':
+        #         indices_needed.append(indice)
 
         # Read-in and save chunk data
         with open(self.file_path, 'rb') as file:
-            for index in indices_needed:
-                file.seek(self.BUF_SIZE * index)
-                self.chunk_data[index] = file.read(self.BUF_SIZE)
-
-    def clear_chunks(self):
-        self.chunk_data = {}
+            file.seek(self.BUF_SIZE * chunk_index)
+            return file.read(self.BUF_SIZE)
 
 
 def decode_file(file:ShareFile):
