@@ -4,10 +4,10 @@ from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
 import src.utilities.networking
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_commands import ServeFile
-from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, FTPClientCreator
+from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
@@ -121,12 +121,8 @@ class SlaveProtocol(AMP):
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
-        # deferred.addCallback(self.ensure_created)
         return {}
     OpenTransferServer.responder(open_transfer_server)
-
-    # def ensure_created(self, _):
-    #     return 'Intentional placeholder callback method'
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)

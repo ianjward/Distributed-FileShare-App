@@ -46,11 +46,21 @@ class ShareFile:
         return pickle.dumps(self)
 
     def get_chunks(self, chunk_indexes):
-        print(chunk_indexes)
-        # with open(self.file_path, 'rb') as file:
-        #     for index in chunk_indexes:
-        #         file.seek(self.BUF_SIZE * index)
-        #         self.chunk_data[] = file.read(self.BUF_SIZE)
+        indices_needed = []
+
+        # Parse all needed chunk indices
+        for indice in range(len(chunk_indexes)):
+            if chunk_indexes[indice] == '1':
+                indices_needed.append(indice)
+
+        # Read-in and save chunk data
+        with open(self.file_path, 'rb') as file:
+            for index in indices_needed:
+                file.seek(self.BUF_SIZE * index)
+                self.chunk_data[index] = file.read(self.BUF_SIZE)
+
+    def clear_chunks(self):
+        self.chunk_data = {}
 
 
 def decode_file(file:ShareFile):

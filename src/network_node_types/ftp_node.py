@@ -16,10 +16,9 @@ class TransferServerProtocol(AMP):
         data = file.get_chunks(chunks_needed)
         print('servingfile', file.file_name, chunks_needed)
         file.get_chunks(chunks_needed)
-
-        return {}
-
+        return {'encoded_file': file}
     ServeFile.responder(serve_file)
+# @TODO sever ftp client connection on finish
 
 
 class TransferClientProtocol(AMP):
