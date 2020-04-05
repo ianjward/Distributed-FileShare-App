@@ -15,7 +15,8 @@ def get_local_ip():
 
 class ShareFile:
     sha1_hash = hashlib.sha1()
-    BUF_SIZE = 262164  # 256kb chunks
+    # BUF_SIZE = 262164  # 256kb chunks
+    BUF_SIZE = 65536  # 60kb chunks to avoid amp limit for v1
     file_path = ''
     hash_chunks = {}
     addresses = {}
