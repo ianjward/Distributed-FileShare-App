@@ -14,8 +14,10 @@ from src.utilities.file_manager import ShareFile, monitor_file_changes
 
 
 class SlaveProtocol(AMP):
+    chunks_awaiting_update = {}
+    updating_file = False
+
     def connectionMade(self):
-        self.updating_file = False
         self.master_ip = self.factory.master_ip
         self.port = self.factory.port
         self.share_name = self.factory.share_name
@@ -115,34 +117,33 @@ class SlaveProtocol(AMP):
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
     def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
-        num_chunks_awaiting = len(chunks.values())
-        ftp_open = True
-        close_tries = 0
+        self.chunks_awaiting_update[file.file_name] = len(chunks.values())
 
         # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
                 updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
-                num_chunks_awaiting -= updated_chunk.addCallback(self.write_chunks, file)
-
-        # Close ftp connection
-        while ftp_open:
-            state_and_tries = deferLater(reactor, 2, self.close_ftp, num_chunks_awaiting, close_tries)
-            ftp_open = state_and_tries[0]
-            close_tries = state_and_tries[1]
+                updated_chunk.addCallback(self.write_chunks, file)
+                deferLater(reactor, 5, self.close_ftp, -1, file.file_name)
 
     def write_chunks(self, message:dict, file: ShareFile):
         print("writing chunks", file.file_name)
-        return 1
 
-    def close_ftp(self, awaiting_chunks: int, num_close_tries: int):
-        if awaiting_chunks == 0 or num_close_tries == 5:
+        # Close ftp connection
+        self.chunks_awaiting_update[file.file_name] -= 1
+        self.close_ftp(self.chunks_awaiting_update[file.file_name])
+
+    def close_ftp(self, awaiting_chunks: int, file_name: str):
+        if awaiting_chunks == -1:
+            print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
             self.updating_file = False
+            self.chunks_awaiting_update[file_name] = 0
             # @TODO close connection here
-            return False, num_close_tries
 
-        num_close_tries += 1
-        return True, num_close_tries
+        if awaiting_chunks == 0:
+            self.updating_file = False
+            self.chunks_awaiting_update[file_name] = 0
+            # @TODO close connection here
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
