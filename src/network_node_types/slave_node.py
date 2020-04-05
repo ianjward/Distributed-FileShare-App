@@ -124,17 +124,17 @@ class SlaveProtocol(AMP):
             if value == ip:
                 updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
                 updated_chunk.addCallback(self.write_chunks, file)
-                deferLater(reactor, 5, self.close_ftp, -1, file.file_name)
+        deferLater(reactor, 5, self.close_ftp, -1, file.file_name)
 
     def write_chunks(self, message:dict, file: ShareFile):
         print("writing chunks", file.file_name)
 
         # Close ftp connection
         self.chunks_awaiting_update[file.file_name] -= 1
-        self.close_ftp(self.chunks_awaiting_update[file.file_name])
+        self.close_ftp(self.chunks_awaiting_update[file.file_name], file.file_name)
 
     def close_ftp(self, awaiting_chunks: int, file_name: str):
-        if awaiting_chunks == -1:
+        if awaiting_chunks == -1 and self.chunks_awaiting_update[file_name] != 0:
             print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
@@ -143,6 +143,7 @@ class SlaveProtocol(AMP):
         if awaiting_chunks == 0:
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
+            print('SLAVE: Updated all chunks for', file_name, 'closing ftp connection')
             # @TODO close connection here
 
     def open_transfer_server(self):
