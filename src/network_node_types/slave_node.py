@@ -1,6 +1,5 @@
 import glob
 import os
-
 from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
@@ -8,8 +7,7 @@ import src.utilities.networking
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_commands import ServeFile
-from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, FTPClientCreator, \
-    TransferClientProtocol
+from src.network_traffic_types.ftp_transfer import FTPServer, create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
@@ -17,6 +15,7 @@ from src.utilities.file_manager import ShareFile, monitor_file_changes
 
 class SlaveProtocol(AMP):
     def connectionMade(self):
+        self.updating_file = False
         self.master_ip = self.factory.master_ip
         self.port = self.factory.port
         self.share_name = self.factory.share_name
@@ -42,11 +41,14 @@ class SlaveProtocol(AMP):
             path_to_files = os.path.join(self.file_directory, '*')
             file_locations = glob.glob(path_to_files)
 
+            # Seed each file
             for file in file_locations:
                 share_file = ShareFile(file)
                 self.files.append(share_file)
                 self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
                 print('SLAVE: Seeding file', share_file.file_name)
+
+        # Update instead of Seed files w/master
         else:
             self.update_all_share_files()
 
@@ -57,6 +59,7 @@ class SlaveProtocol(AMP):
         path_to_files = os.path.join(self.file_directory, '*')
         file_locations = glob.glob(path_to_files)
 
+        # Update each file
         for file in file_locations:
             share_file = ShareFile(file)
             self.files.append(share_file)
@@ -72,6 +75,7 @@ class SlaveProtocol(AMP):
         statuses = file_statuses.split(' ')
         chunks = {}
         ips = set()
+        self.updating_file = True
         i = 0
 
         # Sort uptodate files from outofdate files
@@ -95,11 +99,13 @@ class SlaveProtocol(AMP):
     def update_chunks(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
         file_server = client.factory.distant_end
 
+        # Attempt to reconnect to ftp server
         if file_server is None and attempts < 5:
             client.start_connect()
             attempts += 1
             deferLater(reactor, 1, self.update_chunks, client, chunks, ip, attempts, file)
 
+        # Update chunks w/ ftp server
         if file_server is not None:
             indices_needed = ''
             for key, value in chunks.items():
@@ -107,8 +113,11 @@ class SlaveProtocol(AMP):
 
             file_server.callRemote(ServeFile, encoded_file=file.encode(), chunks_needed=indices_needed)
 
+        # Give up on ftp server connection after 5 tries
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
+
+        self.updating_file = False
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
@@ -133,7 +142,8 @@ class SlaveProtocol(AMP):
 
     def file_modified(self, event: FileModifiedEvent):
         print(event.src_path, event.event_type)
-        # self.update_file(event.src_path)
+        # if not self.updating_file:
+        #     self.update_file(event.src_path)
 
 
 class SlaveNode(ClientFactory):

@@ -19,6 +19,7 @@ class ShareFile:
     file_path = ''
     hash_chunks = {}
     addresses = {}
+    chunk_data = {}
 
     def __init__(self, file_path: str):
         self.file_path = file_path
@@ -43,6 +44,13 @@ class ShareFile:
 
     def encode(self):
         return pickle.dumps(self)
+
+    def get_chunks(self, chunk_indexes: []):
+        print(chunk_indexes)
+        # with open(self.file_path, 'rb') as file:
+        #     for index in chunk_indexes:
+        #         file.seek(self.BUF_SIZE * index)
+        #         self.chunk_data[] = file.read(self.BUF_SIZE)
 
 
 def decode_file(file:ShareFile):
