@@ -45,7 +45,7 @@ class ShareFile:
     def encode(self):
         return pickle.dumps(self)
 
-    def get_chunks(self, chunk_indexes: []):
+    def get_chunks(self, chunk_indexes):
         print(chunk_indexes)
         # with open(self.file_path, 'rb') as file:
         #     for index in chunk_indexes:

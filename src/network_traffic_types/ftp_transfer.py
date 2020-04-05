@@ -13,7 +13,7 @@ class TransferServerProtocol(AMP):
 
     def serve_file(self, encoded_file, chunks_needed):
         file = decode_file(encoded_file)
-        data = file.get_chunk()
+        data = file.get_chunks(chunks_needed)
         print('servingfile', file.file_name, chunks_needed)
         file.get_chunks(chunks_needed)
 
