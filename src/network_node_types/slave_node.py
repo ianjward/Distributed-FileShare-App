@@ -43,7 +43,7 @@ class SlaveProtocol(AMP):
 
             # Seed each file
             for file in file_locations:
-                share_file = ShareFile(file)
+                share_file = ShareFile(file, self.share_name)
                 self.files.append(share_file)
                 self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
                 print('SLAVE: Seeding file', share_file.file_name)
@@ -61,7 +61,7 @@ class SlaveProtocol(AMP):
 
         # Update each file
         for file in file_locations:
-            share_file = ShareFile(file)
+            share_file = ShareFile(file, self.share_name)
             self.files.append(share_file)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)

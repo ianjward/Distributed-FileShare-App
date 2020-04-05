@@ -21,8 +21,9 @@ class ShareFile:
     hash_chunks = {}
     addresses = {}
 
-    def __init__(self, file_path: str):
-        self.file_path = file_path
+    def __init__(self, file_path: str, share_name: str):
+        # self.file_path = file_path
+        self.share_name = share_name
         self.file_name = Path(file_path).name
         self.last_mod_time = os.path.getmtime(file_path)
         self.__hash__()
@@ -30,7 +31,7 @@ class ShareFile:
     def __hash__(self):
         index = 0
         # Read in a file 60kb at a time hashing+saving each chunk
-        with open(self.file_path, 'rb') as file:
+        with open(self.get_file_path(), 'rb') as file:
             while True:
                 data = file.read(self.BUF_SIZE)
                 if not data:
@@ -47,9 +48,12 @@ class ShareFile:
 
     def get_chunk(self, chunk_index):
         # Seek and return chunk data
-        with open(self.file_path, 'rb') as file:
+        with open(self.get_file_path(), 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
+
+    def get_file_path(self):
+        return os.path.join('monitored_files', self.share_name, self.file_name)
 
 
 def decode_file(file:ShareFile):
