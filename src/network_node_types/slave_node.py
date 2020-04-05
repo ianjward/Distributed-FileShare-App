@@ -101,11 +101,11 @@ class SlaveProtocol(AMP):
             deferLater(reactor, 1, self.update_chunks, client, chunks, ip, attempts, file)
 
         if file_server is not None:
-            chunks_needed = ''
+            indices_needed = ''
             for key, value in chunks.items():
-                chunks_needed += '1' if value == ip else '0'
+                indices_needed += '1' if value == ip else '0'
 
-            file_server.callRemote(ServeFile, encoded_file=file.encode())
+            file_server.callRemote(ServeFile, encoded_file=file.encode(), chunks_needed=indices_needed)
 
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
