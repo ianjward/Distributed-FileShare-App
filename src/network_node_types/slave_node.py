@@ -23,7 +23,7 @@ class SlaveProtocol(AMP):
         self.share_name = self.factory.share_name
         self.file_directory = self.factory.file_directory
         self.files = self.factory.files
-        self.open_transfer_server()
+        self.open_ftp_server()
         print("SLAVE: Talking to Master at", self.master_ip, ':', self.factory.port)
 
     def authenticate(self):
@@ -123,17 +123,19 @@ class SlaveProtocol(AMP):
         for key, value in chunks.items():
             if value == ip:
                 updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
-                updated_chunk.addCallback(self.write_chunks, file)
-        deferLater(reactor, 5, self.close_ftp, -1, file.file_name)
+                updated_chunk.addCallback(self.write_chunk, file, key)
+        deferLater(reactor, 5, self.close_ftp, -1, file)
 
-    def write_chunks(self, message:dict, file: ShareFile):
-        print("writing chunks", file.file_name)
-
+    def write_chunk(self, message:dict, file: ShareFile, chunk_index: int):
+        print("SLAVE: Writing chunks", file.file_name)
+        file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
         self.chunks_awaiting_update[file.file_name] -= 1
-        self.close_ftp(self.chunks_awaiting_update[file.file_name], file.file_name)
+        self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
 
-    def close_ftp(self, awaiting_chunks: int, file_name: str):
+    def close_ftp(self, awaiting_chunks: int, file: ShareFile):
+        file_name = file.file_name
+
         if awaiting_chunks == -1 and self.chunks_awaiting_update[file_name] != 0:
             print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
             self.updating_file = False
@@ -145,11 +147,12 @@ class SlaveProtocol(AMP):
             self.chunks_awaiting_update[file_name] = 0
             print('SLAVE: Updated all chunks for', file_name, 'closing ftp connection')
             # @TODO close connection here
+        file.__hash__()
 
-    def open_transfer_server(self):
-        deferred = create_ftp_server(8000)
+    def open_ftp_server(self):
+        create_ftp_server(8000)
         return {}
-    OpenTransferServer.responder(open_transfer_server)
+    OpenTransferServer.responder(open_ftp_server)
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)

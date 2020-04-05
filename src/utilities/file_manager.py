@@ -46,11 +46,17 @@ class ShareFile:
     def encode(self):
         return pickle.dumps(self)
 
-    def get_chunk(self, chunk_index):
+    def get_chunk(self, chunk_index: int):
         # Seek and return chunk data
         with open(self.get_file_path(), 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
+
+    def write_chunk(self, chunk_index: int, data):
+        # Seek and write chunk data
+        with open(self.get_file_path(), 'wb') as file:
+            file.seek(self.BUF_SIZE * chunk_index)
+            file.write(data)
 
     def get_file_path(self):
         return os.path.join('monitored_files', self.share_name, self.file_name)
