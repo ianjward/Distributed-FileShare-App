@@ -72,17 +72,10 @@ class SlaveProtocol(AMP):
 
     def update_file(self, updated_files, file: ShareFile):
         file_statuses = updated_files['update_ips']
-        statuses = file_statuses.split(' ')
         chunks = {}
         ips = set()
         self.updating_file = True
-        i = 0
-
-        # Sort uptodate files from outofdate files
-        for status in statuses:
-            if status != 'current' and status != '':
-                chunks[i] = status
-                i += 1
+        self.sort_statuses(file_statuses.split(' '), chunks)
 
         # Connect to nodes with chunk if there are changes to make
         if bool(chunks):
@@ -95,6 +88,14 @@ class SlaveProtocol(AMP):
                 client = FTPClientCreator(ip, 8000)
                 client.start_connect()
                 deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)
+
+    def sort_statuses(self, statuses: [], chunks: dict):
+        i = 0
+        # Sort uptodate files from outofdate files
+        for status in statuses:
+            if status != 'current' and status != '':
+                chunks[i] = status
+                i += 1
 
     def connect_to_ftp(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
         file_server = client.factory.distant_end
@@ -113,16 +114,35 @@ class SlaveProtocol(AMP):
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
-        self.updating_file = False
-
     def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
+        num_chunks_awaiting = len(chunks.values())
+        ftp_open = True
+        close_tries = 0
+
+        # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
                 updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
-                updated_chunk.addCallback(self.write_chunks)
+                num_chunks_awaiting -= updated_chunk.addCallback(self.write_chunks, file)
 
-    def write_chunks(self, message:dict):
-        print("writing chunks")
+        # Close ftp connection
+        while ftp_open:
+            state_and_tries = deferLater(reactor, 2, self.close_ftp, num_chunks_awaiting, close_tries)
+            ftp_open = state_and_tries[0]
+            close_tries = state_and_tries[1]
+
+    def write_chunks(self, message:dict, file: ShareFile):
+        print("writing chunks", file.file_name)
+        return 1
+
+    def close_ftp(self, awaiting_chunks: int, num_close_tries: int):
+        if awaiting_chunks == 0 or num_close_tries == 5:
+            self.updating_file = False
+            # @TODO close connection here
+            return False, num_close_tries
+
+        num_close_tries += 1
+        return True, num_close_tries
 
     def open_transfer_server(self):
         deferred = create_ftp_server(8000)
