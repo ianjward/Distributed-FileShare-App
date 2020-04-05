@@ -105,8 +105,7 @@ class SlaveProtocol(AMP):
             for key, value in chunks.items():
                 chunks_needed += '1' if value == ip else '0'
 
-            print(chunks_needed)
-            file_server.callRemote(ServeFile, encoded_file=file.encode(), chunks_needed=chunks_needed)
+            file_server.callRemote(ServeFile, encoded_file=file.encode())
 
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
