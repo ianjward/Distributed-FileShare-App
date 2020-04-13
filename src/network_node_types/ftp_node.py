@@ -2,7 +2,7 @@ from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint, connectProtocol
 from twisted.internet.protocol import ClientFactory, Factory
 from twisted.protocols.amp import AMP
-from src.network_traffic_types.ftp_commands import ServeFile
+from src.network_traffic_types.ftp_cmds import ServeFile
 from src.utilities.file_manager import decode_file, ShareFile
 
 
