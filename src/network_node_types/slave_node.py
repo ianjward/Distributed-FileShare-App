@@ -12,9 +12,11 @@ from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes
 
+# chunks_to_receive = {}
+
 
 class SlaveProtocol(AMP):
-    chunks_awaiting_update = {}
+    # chunks_awaiting_update = {}
     updating_file = False
 
     def connectionMade(self):
@@ -68,7 +70,7 @@ class SlaveProtocol(AMP):
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
-
+        # @TODO push all files master doesn't have
         # @TODO figure out how to batch events
         monitor_file_changes(self)
 
@@ -117,18 +119,23 @@ class SlaveProtocol(AMP):
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
     def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
+        # global chunks_to_receive
+        # chunks_to_receive[file.file_name] = len(chunks.items())
         self.chunks_awaiting_update[file.file_name] = len(chunks.values())
 
         # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
-                updated_chunk = file_server.callRemote(ServeFile, encoded_file=file.encode(), chunk_needed=key)
-                updated_chunk.addCallback(self.write_chunk, file, key)
+                updated_chunk = file_server.callRemote(
+                    ServeFile, encoded_file=file.encode(), chunk_needed=key, total_num_chunks=len(chunks.items()))
+                updated_chunk.addCallback(self.write_chunks, file, key, len(chunks.items()))
         deferLater(reactor, 5, self.close_ftp, -1, file)
 
-    def write_chunk(self, message:dict, file: ShareFile, chunk_index: int):
-        print("SLAVE: Writing chunks", file.file_name)
-        file.write_chunk(chunk_index, message['chunk'])
+    def write_chunks(self, message:dict, file: ShareFile, chunk_index: int, total_chunks: int):
+        # global chunks_to_receive
+
+        print("SLAVE: Received chunk", chunk_index, 'of', total_chunks, 'for', file.file_name)
+        # file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
         self.chunks_awaiting_update[file.file_name] -= 1
         self.close_ftp(self.chunks_awaiting_update[file.file_name], file)

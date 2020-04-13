@@ -6,6 +6,7 @@ idna==2.8
 incremental==17.5.0
 netifaces==0.10.9
 pathtools==0.1.2
+peewee==3.13.2
 PyHamcrest==2.0.0
 PySide2==5.14.1
 shiboken2==5.14.1

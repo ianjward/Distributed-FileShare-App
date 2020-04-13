@@ -49,7 +49,7 @@ class MasterProtocol(AMP):
     def seed_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
-        hashes = file.hash_chunks
+        hashes = file.chunk_hashes
         chunk_ips = []
         mod_times = []
 
@@ -78,22 +78,24 @@ class MasterProtocol(AMP):
         num_stored_chunks = len(stored_ips)
         stored_timestamp = self.factory.tracked_files[file_name][1][1]
         stored_hashes = self.factory.tracked_files[file_name][0]
+        altered_ips = set()
 
         # Check new hash against stored hash
         while i < num_stored_chunks:
             stored_is_current = cmp_floats(stored_timestamp[i], file.last_mod_time)
             stored_matches_file = stored_ips[i] == sender_ip
-            altered_ips = set()
 
             # Choose latest file data to store
             if stored_hashes[i] != hashes[i]:
                 stored_timestamp[i] = stored_timestamp[i] if stored_is_current else file.last_mod_time
+                # @TODO is sha1hash right?
                 stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
                 stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
 
             # Append current status to return string if chunk is uptodate
             if stored_is_current or stored_matches_file:
                 chunks_to_update += 'current '
+                # altered_ips.add(stored_ips[i])
 
             # Append ip with the uptodate chunk if file is outofdate
             else:
@@ -101,10 +103,16 @@ class MasterProtocol(AMP):
                 altered_ips.add(stored_ips[i])
             i += 1
 
+        # Track any new file chunks
+        while i < file.num_chunks:
+            chunks_to_update += stored_ips[i] + ' '
+            altered_ips.add(stored_ips[i])
+            i += 1
+
         # for ip in altered_ips:
-            # print(self.factory.endpoints)
-            # connection = self.factory.endpoints[ip]
-            # connection.callRemote(OpenTransferServer)
+        #     print(self.factory.endpoints)
+        #     connection = self.factory.endpoints[ip]
+        #     connection.callRemote(OpenTransferServer)
         return {'update_ips': chunks_to_update}
     UpdateFile.responder(update_file)
 

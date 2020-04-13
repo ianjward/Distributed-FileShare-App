@@ -1,1 +1,87 @@
-asdfjadsf
+Will it work for long text
+he last time the world was ending, two cataclysms aligned. On one side of the planet, a wayward asteroid dropped like a cartoon anvil, punching through the edge of the Yucatan Peninsula and penetrating deep into Earth’s crust. Around the same time — 66 million years ago — a million cubic kilometers of lava were in the process of bubbling up to the surface, releasing climate-altering carbon dioxide and sulfur into the atmosphere and forming what would become the Deccan Traps of modern-day India.
+
+Rock layers around the world show what happened next. No dinosaurs besides the birds made it out. Neither did the squidlike ammonites that curled like rams’ horns, or marine reptiles including the plesiosaurs (Loch Ness conspiracies notwithstanding). But because of the close timing of the asteroid and the volcanism, geologists have spent years staking out increasingly acrimonious positions on which one deserves the blame for the ensuing carnage. In 2018, The Atlantic called the debate “The Nastiest Feud in Science.”
+
+Until recently, Pincelli Hull kept out of the fray. In her subfield, marine plankton fossils, the impact was considered the obvious sole cause of what’s called the Cretaceous-Paleogene extinction. Instead, she focused on understanding how life bounced back, not on what had almost snuffed it out. “There was a lot to be done without really ruffling any feathers,” said Hull, a paleontologist at Yale University.
+
+That changed over time. First, a paleontologist friend who worked on other time periods argued that of course both the asteroid and volcanism were responsible. “I remember feeling so irritated,” Hull said. “This isn’t your topic of study; how do you have an opinion on this?”
+
+But once she realized that researchers looking at other records of the extinction considered the volcanism theory an open question, not just a minority view, Hull started reaching out to them. Many of these scientists were working on more accurate ways to date when exactly the Deccan Traps erupted, and she wanted to understand their emerging evidence.
+
+Researchers had long known that the Deccan Traps erupted within a few million years of the asteroid strike. But in 2015, a group based at Princeton University significantly narrowed the timing. They found that the lava began squishing out of the earth only 250,000 years before the impact and continued for 500,000 years afterward. Then last year, they estimated that a major pulse of lava erupted just tens of thousands of years before the strike. (At the same time, a Berkeley group argued instead that a big pulse began right after.)
+
+It may seem like an obscure chronological feud, but this one matters: If the Deccan Traps released lava and gas just before the asteroid fell, at least some of the subsequent carnage could be attributed to climate change from the volcanoes. “It made me start to think, ‘OK, this is an open question,’” Hull said.
+
+She didn’t think that for long. Hull went on to lead a global collaboration that, early this year, published a definitive timeline of how the mayhem played out in small ocean fossils. The team tracked changes in global temperature over time. The planet did warm up before the impact, Hull found, but then cooled back down before the asteroid arrived. And while that warming event didn’t seem to correlate to marine extinctions, over 90% of plankton species abruptly vanished after the impact. The study suggests that the major influence of the Deccan Traps was to guide the post-apocalyptic evolution of surviving species — not to drive the extinction itself.
+
+Share this article
+COPIED!
+Newsletter
+Get Quanta Magazine delivered to your inbox
+
+Subscribe now
+Most recent newsletter
+David Friend Hall at the Yale Peabody Museum of Natural History
+Hull at the Yale Peabody Museum of Natural History, where she’s an assistant curator. Ammonites such as the rainbow-colored specimen on the right were one of the many casualties of the K-T extinction.
+
+Beatrice de Gea for Quanta Magazine
+Quanta spoke with Hull about that cataclysm — often abbreviated as the K-T extinction — her deep love of planktonic creatures, and the ways in which the K-T extinction resembles what’s going on today. The interview has been condensed and edited for clarity.
+
+Do you remember first learning about the extinction of the dinosaurs? In my own childhood, it was always blamed on the asteroid impact.
+I have to admit that as a child, I wasn’t obsessed with dinosaurs at all. I came into all of this pretty backward. I’m from Ohio, and I grew up without ever seeing the ocean. I remember the first time I saw the ocean and I looked at plankton, at the stuff in the water, under magnification. I was enamored of their strangeness; they’re just crazy weird. So I went off to grad school to study modern ocean ecosystems, and it was only there that I came into studying mass extinctions, essentially from the present back.
+
+Deinonychus skeleton.
+The raptor Deinonychus stands astride Hull at Yale University’s Environmental Science Center.
+
+Beatrice de Gea for Quanta Magazine
+You’ve also mentioned in talks that you left high school early to go sailing.
+The root of that story is that I am a chronic procrastinator. When I should have been doing my high school project, I was online looking at how I could go sailing around the world. And then I left halfway through my senior year and went to the Sea Education Association in Woods Hole and did some training in oceanography, maritime history and literature. I headed out on an oceanographic vessel and I liked it so much that I didn’t want to go to college. My parents were like, could you please try college out for a semester? I was like, no, I’d rather be a deckhand. But I tried college out for a semester and decided to stick it out.
+
+You started your career trying to understand modern-day ecosystems, only to jump to the extinction that killed the dinosaurs. Is that a logical place to leap, 66 million years back?
+People have been wondering whether or not we’re in the middle of a mass extinction right now. The most recent big mass extinction is the K-T mass extinction, and its influence is so big that you actually see it profoundly. Another reason why it’s helpful to study the most recent big mass extinction is that as you go further back in time, you have exponentially fewer fossil archives, because the whole world is basically a gigantic rock recycling factory.
+
+Microfossil slide cabinet.
+Microfossil slide cabinet.
+Hull and her colleagues collect, prepare and analyze a vast library of microfossil slides collected from deep-sea sediments.
+
+Beatrice de Gea for Quanta Magazine
+Does that mean it’s rare to drill a seafloor sample that spans even this extinction?
+Yeah, I’m a biologist, and when the cores are coming up, it’s sort of intriguing, but in the way that staring at clouds is intriguing. Usually you’re like, oh, there’s another tube of brown mud. There’s another tube of grayish-blue mud. But when you come across a boundary like the K-T boundary, it’s blaring. It’s awesome.
+
+For your new paper, do you remember getting those specific cores?
+A lot of that data has been around for a very long time, actually. I went on a cruise in 2012 where we drilled this awesome K-T boundary section, and we were excited about it just because it was beautiful. It was just well preserved. I literally stayed up all night taking tiny little bits of sample along that K-T boundary section with some of my friends — some of the co-authors on [the new] paper. We did tons of really basic chemistry: carbon and oxygen isotope analysis. And when we got the record back, it was like the world’s most boring record.
+
+Why was it boring?
+The boring story is that you’re looking at the late Cretaceous for millions of years. Climate goes up, it gets a little warmer, or colder, warmer, colder. But effectively, there’s nothing much to talk about. And then right at the impact, all the records go haywire. The story, the boring story — and the interesting story — is that some amount of volcanism did happen before the boundary, but the records are basically pretty stable throughout. They do show a slight warming and a slight cooling. But it’s nothing to write home about. The only thing that really jumps out at you is: Look at the impact. Everything in the deep sea goes crazy.
+
+Late Cretaceous planktonic foraminifera.
+Many species of plankton with calcium carbonate shells, such as those shown here, were driven extinct at the K-T boundary, suggesting that the oceans rapidly acidified as a result of the asteroid impact. These fossils are roughly the size of a grain of salt.
+
+Beatrice de Gea for Quanta Magazine
+So you confirmed what you considered to be the standard story, and so you put the work aside?
+I knew there was a story there, but I was interested in some other topics at the time. So I kept moving on to other things. And then there were two papers that were published in 2019. They used two different geological chronometers to date the Deccan Traps, and they came up with two different stories about when the main pulse of lava started. Princeton researchers were saying that it started right before the impact, and the Berkeley team was saying it started in a big pulse right after. And I realized that this is my moment. We can use my seafloor data to actually test these two hypotheses.
+
+What did you find?
+The data we were looking at in this study was actually temperature data. Then we ran a bunch of carbon-cycle models to try and see how can we simulate these temperature records. If you have that volcanism going on before the impact, it has to stop about 200,000 years before [to reproduce the temperatures we see]. And if you look at species, nothing really goes extinct at that time. All the species that have moved to higher latitudes because of the warmth, they’ve moved back down. The ecosystems did respond to this warming that’s probably due to volcanism, but they’ve also come back to their normal baseline before the impact.
+
+
+
+Evidence from the oceans decisively shows that an asteroid strike caused the last mass extinction, argues Pincelli Hull. The cataclysm continues to hold lessons for today.
+Video: Evidence from the oceans decisively shows that an asteroid strike caused the last mass extinction, argues Pincelli Hull. The cataclysm continues to hold lessons for today.
+
+Beatrice de Gea for Quanta Magazine
+And then the impact happens, and everything goes haywire. We’re not suffering through an asteroid strike now, but does this work tell us anything about what’s going on in the present day?
+Some mass extinctions that we see in the fossil record potentially played out over hundreds of thousands of years. That’s a different set of mechanisms than in an extinction like the K-T boundary, where we’re arguing it played out over the course of hundreds of years. Hundreds of years is a human timescale. That’s what we’re doing now.
+
+What the study says is that the K-T extinction is perhaps a really good analogue for today because it’s so, so rapid. We’re not talking about volcanism priming the pump for extinction. Really nasty conditions for a few decades, or a few hundred years, is all it takes.
+
+That’s sobering.
+RELATED:
+How Dinosaurs Shrank and Became Birds
+Continents of the Underworld Come Into Focus
+How Nearby Stellar Explosions Could Have Killed Off Large Animals
+That’s another reason why I got into the fossil record. When I was doing modern conservation biology at the beginning of my Ph.D., that made me so depressed. I find that the ancient stuff is abstract enough that I don’t think about it too much.
+
+And on long timescales, the cheerful note is that, as Stephen Jay Gould said, not once since life evolved has it ever gone completely extinct. Life as a whole is pretty tough. But the species that are dominant before a mass extinction, effectively, are almost never the dominant ones afterward. And so that’s extremely sobering. If you’re grumpy at humanity, then you can think, well, somebody else is going to get a chance. I’m fairly hopeful that life goes on, and when life goes on, it does really interesting and creative stuff. So that’s good. But as a human, I care about us, so that’s depressing.
+
