@@ -30,7 +30,7 @@ class ShareFile:
     file_path = ''
     chunk_hashes = {}
     addresses = {}
-    data_chunks = []
+    chunks_needed = []
     update_index = 0
     update_data = None
     num_chunks = 0
@@ -61,11 +61,31 @@ class ShareFile:
                 # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
         self.num_chunks = index
 
+    def get_chunk(self, chunk_index: int):
+        # Seek and return chunk data
+        with open(self.file_path, 'rb') as file:
+            file.seek(self.BUF_SIZE * chunk_index)
+            return file.read(self.BUF_SIZE)
+
     def encode(self):
         return pickle.dumps(self)
 
     def get_file_path(self):
         return os.path.join('monitored_files', self.share_name, self.file_name)
+
+
+class Chunk:
+    def __init__(self, index:int, file:ShareFile):
+        self.file = file
+        self.index = index
+        self.data = file.get_chunk(index)
+        self.chunks_in_file = file.num_chunks
+
+    def encode(self):
+        return pickle.dumps(self)
+
+    def decode_chunk(self):
+        return pickle.loads(self)
 
 
 class FileManager:

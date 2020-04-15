@@ -6,7 +6,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-from src.network_traffic_types.ftp_cmds import ServeFile
+from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
@@ -126,20 +126,23 @@ class SlaveProtocol(AMP):
         # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
-                print("updating chunks method")
-                # updated_chunks = file_server.callRemote(
-                    # ServeFile, encoded_file=file.encode(), chunk_needed=key, total_num_chunks=len(chunks.items()))
-                # updated_chunks.addCallback(self.write_chunks, file, key, len(chunks.items()))
-        deferLater(reactor, 5, self.close_ftp, -1, file)
+                file.chunks_needed.append(key)
 
-    def receive_chunks(self, message:dict, file: ShareFile, chunk_index: int, total_chunks: int):
+        file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+
+    def receive_chunk(self, chunk):
         # global chunks_to_receive
-
-        print("SLAVE: Received chunk", chunk_index, 'of', total_chunks, 'for', file.file_name)
+        decoded_chunk = chunk.decode_chunk()
+        print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
         # file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
         # self.chunks_awaiting_update[file.file_name] -= 1
-        self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
+        # self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
+
+        # @TODO close ftp and reset chunks needed
+        # deferLater(reactor, 5, self.close_ftp, -1, file)
+        ReceiveChunk.responder(self.receive_chunk)
+
 
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):
         file_name = file.file_name
