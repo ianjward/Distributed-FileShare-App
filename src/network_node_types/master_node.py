@@ -65,7 +65,7 @@ class MasterProtocol(AMP):
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
-        hashes = file.hash_chunks
+        hashes = file.chunk_hashes
         chunks_to_update = ''
         i = 0
 
@@ -109,8 +109,8 @@ class MasterProtocol(AMP):
             altered_ips.add(stored_ips[i])
             i += 1
 
-        # for ip in altered_ips:
-        #     print(self.factory.endpoints)
+        for ip in altered_ips:
+            print(self.factory.endpoints)
         #     connection = self.factory.endpoints[ip]
         #     connection.callRemote(OpenTransferServer)
         return {'update_ips': chunks_to_update}

@@ -16,7 +16,7 @@ from src.utilities.file_manager import ShareFile, monitor_file_changes
 
 
 class SlaveProtocol(AMP):
-    # chunks_awaiting_update = {}
+    chunks_awaiting_update = {}
     updating_file = False
 
     def connectionMade(self):
@@ -126,18 +126,19 @@ class SlaveProtocol(AMP):
         # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
-                updated_chunk = file_server.callRemote(
-                    ServeFile, encoded_file=file.encode(), chunk_needed=key, total_num_chunks=len(chunks.items()))
-                updated_chunk.addCallback(self.write_chunks, file, key, len(chunks.items()))
+                print("updating chunks method")
+                # updated_chunks = file_server.callRemote(
+                    # ServeFile, encoded_file=file.encode(), chunk_needed=key, total_num_chunks=len(chunks.items()))
+                # updated_chunks.addCallback(self.write_chunks, file, key, len(chunks.items()))
         deferLater(reactor, 5, self.close_ftp, -1, file)
 
-    def write_chunks(self, message:dict, file: ShareFile, chunk_index: int, total_chunks: int):
+    def receive_chunks(self, message:dict, file: ShareFile, chunk_index: int, total_chunks: int):
         # global chunks_to_receive
 
         print("SLAVE: Received chunk", chunk_index, 'of', total_chunks, 'for', file.file_name)
         # file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
-        self.chunks_awaiting_update[file.file_name] -= 1
+        # self.chunks_awaiting_update[file.file_name] -= 1
         self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
 
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):

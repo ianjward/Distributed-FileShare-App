@@ -7,11 +7,15 @@ from src.utilities.file_manager import decode_file, ShareFile
 
 
 class TransferServerProtocol(AMP):
+    chunks_needed = []
+
     def connectionMade(self):
         self.factory.distant_end = self
         print("FTP SERVER: Connected to client")
 
     def serve_file(self, encoded_file, chunk_needed, total_num_chunks):
+        self.chunks_needed.append(chunk_needed)
+        # if()
         file = decode_file(encoded_file)
         print('FTP SERVER: Serving file', file.file_name, 'chunk:', chunk_needed)
         updated_chunk = file.get_chunk(chunk_needed)
