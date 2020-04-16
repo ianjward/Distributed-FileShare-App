@@ -16,9 +16,15 @@ class TransferServerProtocol(AMP):
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         print('FTP SERVER: Serving file', file.file_name)
-        for i in file.chunks_needed:
-            Chunk(i, file).encode()
-            self.callRemote(ReceiveChunk, Chunk(i, file).encode())
+        chunks_needed = file.chunks_needed.split(' ')
+
+        for i in chunks_needed:
+            if i == '':
+                break
+            chunk = Chunk(i, file).encode()
+            print(chunk)
+            # self.callRemote(ReceiveChunk, Chunk(i, file).encode())
+            self.callRemote(ReceiveChunk, chunk='123'.encode())
         return {}
     ServeChunks.responder(serve_chunks)
 # @TODO sever ftp client connection on finish? or did i do this earlier in slave?
@@ -28,6 +34,21 @@ class TransferClientProtocol(AMP):
     def connectionMade(self):
         self.factory.distant_end = self
         print("FTP CLIENT: Connected to server")
+
+    def receive_chunk(self, chunk):
+        # global chunks_to_receive
+        print('hete')
+        # decoded_chunk = chunk.decode_chunk()
+        # print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
+        # file.write_chunk(chunk_index, message['chunk'])
+        # Close ftp connection
+        # self.chunks_awaiting_update[file.file_name] -= 1
+        # self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
+
+        # @TODO close ftp and reset chunks needed
+        # deferLater(reactor, 5, self.close_ftp, -1, file)
+        return {}
+    ReceiveChunk.responder(receive_chunk)
 
 
 class FTPClient(ClientFactory):

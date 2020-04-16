@@ -126,22 +126,8 @@ class SlaveProtocol(AMP):
         # Send for updated chunk and update upon return
         for key, value in chunks.items():
             if value == ip:
-                file.chunks_needed.append(key)
-
+                file.chunks_needed += (' ' + str(key))
         file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
-
-    def receive_chunk(self, chunk):
-        # global chunks_to_receive
-        decoded_chunk = chunk.decode_chunk()
-        print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
-        # file.write_chunk(chunk_index, message['chunk'])
-        # Close ftp connection
-        # self.chunks_awaiting_update[file.file_name] -= 1
-        # self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
-
-        # @TODO close ftp and reset chunks needed
-        # deferLater(reactor, 5, self.close_ftp, -1, file)
-        ReceiveChunk.responder(self.receive_chunk)
 
 
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):

@@ -30,7 +30,7 @@ class ShareFile:
     file_path = ''
     chunk_hashes = {}
     addresses = {}
-    chunks_needed = []
+    chunks_needed = ''
     update_index = 0
     update_data = None
     num_chunks = 0
