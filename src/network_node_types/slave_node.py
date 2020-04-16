@@ -95,7 +95,7 @@ class SlaveProtocol(AMP):
         ips = set()
         self.updating_file = True
         self.sort_statuses(file_statuses.split(' '), chunks)
-
+        print(chunks)
         # Connect to nodes with chunk if there are changes to make
         if bool(chunks):
             # Get unique set of ips to connect to for updates
@@ -104,6 +104,7 @@ class SlaveProtocol(AMP):
 
             # Connect to each needed update node
             for ip in ips:
+                print(ip)
                 client = FTPClientCreator(ip, 8000, self)
                 client.start_connect()
                 deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)

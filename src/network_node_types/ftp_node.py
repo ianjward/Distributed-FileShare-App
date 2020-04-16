@@ -50,7 +50,8 @@ class TransferClientProtocol(AMP):
 
     def receive_chunk(self, chunk):
         decoded_chunk = decode_chunk(chunk)
-        print("FTP CLIENT: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', decoded_chunk.file.file_name)
+        print("FTP CLIENT: Received chunk", decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for', decoded_chunk.file.file_name)
+        print(decoded_chunk.data)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)

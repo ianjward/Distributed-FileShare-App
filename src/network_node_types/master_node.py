@@ -109,10 +109,6 @@ class MasterProtocol(AMP):
             altered_ips.add(stored_ips[i])
             i += 1
 
-        for ip in altered_ips:
-            print(self.factory.endpoints)
-        #     connection = self.factory.endpoints[ip]
-        #     connection.callRemote(OpenTransferServer)
         return {'update_ips': chunks_to_update}
     UpdateFile.responder(update_file)
 
