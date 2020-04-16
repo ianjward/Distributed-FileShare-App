@@ -2,7 +2,7 @@ from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint, connectProtocol
 from twisted.internet.protocol import ClientFactory, Factory
 from twisted.protocols.amp import AMP
-from src.utilities.file_manager import Chunk
+from src.utilities.file_manager import Chunk, decode_chunk
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk
 from src.utilities.file_manager import decode_file, ShareFile
 
@@ -23,7 +23,7 @@ class TransferServerProtocol(AMP):
         for i in chunks_needed:
             if i != '':
                 chunk = Chunk(int(i), file)
-                # chunk.data = chunks[int(i)]
+                chunk.data = chunks[int(i)]
                 self.callRemote(ReceiveChunk, chunk=chunk.encode())
         return {}
     ServeChunks.responder(serve_chunks)
@@ -51,8 +51,8 @@ class TransferClientProtocol(AMP):
     def receive_chunk(self, chunk):
         # global chunks_to_receive
         print('hete')
-        # decoded_chunk = chunk.decode_chunk()
-        # print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
+        decoded_chunk = decode_chunk(chunk)
+        print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
         # file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
         # self.chunks_awaiting_update[file.file_name] -= 1
