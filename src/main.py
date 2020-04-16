@@ -1,8 +1,8 @@
 from twisted.internet import reactor
-from PyQt5.QtWidgets import QApplication
+# from PyQt5.QtWidgets import QApplication
 import src.network_node_types.broadcast_node as broadcast
 import sys
-from src.gui.main_window import GUI
+# from src.gui.main_window import GUI
 # import qt5reactor
 from src.network_node_types.slave_node import SlaveNode
 
