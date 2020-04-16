@@ -10,15 +10,13 @@ from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
-from src.utilities.file_manager import ShareFile, monitor_file_changes
+from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
+
 
 # chunks_to_receive = {}
 
 
 class SlaveProtocol(AMP):
-    chunks_awaiting_update = {}
-    updating_file = False
-
     def connectionMade(self):
         self.master_ip = self.factory.master_ip
         self.port = self.factory.port
@@ -26,6 +24,9 @@ class SlaveProtocol(AMP):
         self.file_directory = self.factory.file_directory
         self.files = self.factory.files
         self.open_ftp_server()
+        self.chunks_awaiting_update = {}
+        self.updating_file = False
+        self.received_chunks = []
         print("SLAVE: Talking to Master at", self.master_ip, ':', self.factory.port)
 
     def authenticate(self):
@@ -74,8 +75,19 @@ class SlaveProtocol(AMP):
         # @TODO figure out how to batch events
         monitor_file_changes(self)
 
-    def test(self):
-        print('intest')
+    def receive_chunk(self, chunk:Chunk):
+        file_name = chunk.file.file_name
+        chunks_remaining = self.chunks_awaiting_update[file_name] - 1
+        self.received_chunks.append(chunk)
+        self.chunks_awaiting_update[file_name] -= 1
+        print('received chunk')
+        # Write to file if all chunks received
+        if chunks_remaining == 0:
+            chunk.file.write_chunks(self.received_chunks)
+        self.close_ftp(self.chunks_awaiting_update[file_name], chunk.file)
+
+        # @TODO close ftp and reset chunks needed
+        deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, updated_files, file: ShareFile):
         file_statuses = updated_files['update_ips']
@@ -122,8 +134,6 @@ class SlaveProtocol(AMP):
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
     def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
-        # global chunks_to_receive
-        # chunks_to_receive[file.file_name] = len(chunks.items())
         self.chunks_awaiting_update[file.file_name] = len(chunks.values())
 
         # Send for updated chunk and update upon return

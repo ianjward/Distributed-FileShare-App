@@ -49,18 +49,9 @@ class TransferClientProtocol(AMP):
         print("FTP CLIENT: Connected to server")
 
     def receive_chunk(self, chunk):
-        # global chunks_to_receive
         decoded_chunk = decode_chunk(chunk)
         print("FTP CLIENT: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', decoded_chunk.file.file_name)
-        print(decoded_chunk.data)
-        self.factory.slave.test()
-        # file.write_chunk(chunk_index, message['chunk'])
-        # Close ftp connection
-        # self.chunks_awaiting_update[file.file_name] -= 1
-        # self.close_ftp(self.chunks_awaiting_update[file.file_name], file)
-
-        # @TODO close ftp and reset chunks needed
-        # deferLater(reactor, 5, self.close_ftp, -1, file)
+        self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)
 

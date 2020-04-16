@@ -74,10 +74,11 @@ class ShareFile:
     def write_chunks(self, received_chunks):
         # Seek and write chunk data
         for chunk in received_chunks:
+            print('attempting to write chunk', chunk.data)
             with open(chunk.file.file_path, 'wb') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
-            
+
     def encode(self):
         return pickle.dumps(self)
 
