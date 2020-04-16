@@ -36,7 +36,6 @@ class TransferServerProtocol(AMP):
         with open(file_path, 'rb') as file:
             while True:
                 data = file.read(buffer)
-                print(data)
                 if not data:
                     break
                 chunks[index] = data
