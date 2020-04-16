@@ -129,7 +129,6 @@ class SlaveProtocol(AMP):
                 file.chunks_needed += (' ' + str(key))
         file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
 
-
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):
         file_name = file.file_name
 

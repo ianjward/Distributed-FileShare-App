@@ -84,9 +84,6 @@ class Chunk:
     def encode(self):
         return pickle.dumps(self)
 
-    def decode_chunk(self):
-        return pickle.loads(self)
-
 
 class FileManager:
     BUF_SIZE = 60000  # 60kb chunks to avoid amp limit for v1
@@ -127,10 +124,12 @@ class FileManager:
 #         database = db
 
 
-
-
 def decode_file(file:ShareFile):
     return pickle.loads(file)
+
+
+def decode_chunk(chunk: Chunk):
+    return pickle.loads(chunk)
 
 
 class FileWatcher(PatternMatchingEventHandler):

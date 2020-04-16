@@ -17,14 +17,13 @@ class TransferServerProtocol(AMP):
         file = decode_file(encoded_file)
         print('FTP SERVER: Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
+        file.file_path = file.get_file_path()
 
+        # Return each chunk with its data
         for i in chunks_needed:
-            if i == '':
-                break
-            chunk = Chunk(i, file).encode()
-            print(chunk)
-            # self.callRemote(ReceiveChunk, Chunk(i, file).encode())
-            self.callRemote(ReceiveChunk, chunk='123'.encode())
+            if i != '':
+                chunk = Chunk(int(i), file).encode()
+                self.callRemote(ReceiveChunk, chunk=chunk)
         return {}
     ServeChunks.responder(serve_chunks)
 # @TODO sever ftp client connection on finish? or did i do this earlier in slave?
