@@ -74,6 +74,9 @@ class SlaveProtocol(AMP):
         # @TODO figure out how to batch events
         monitor_file_changes(self)
 
+    def test(self):
+        print('intest')
+
     def update_file(self, updated_files, file: ShareFile):
         file_statuses = updated_files['update_ips']
         chunks = {}
@@ -89,7 +92,7 @@ class SlaveProtocol(AMP):
 
             # Connect to each needed update node
             for ip in ips:
-                client = FTPClientCreator(ip, 8000)
+                client = FTPClientCreator(ip, 8000, self)
                 client.start_connect()
                 deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)
 

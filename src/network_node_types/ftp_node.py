@@ -50,9 +50,10 @@ class TransferClientProtocol(AMP):
 
     def receive_chunk(self, chunk):
         # global chunks_to_receive
-        print('hete')
         decoded_chunk = decode_chunk(chunk)
-        print("SLAVE: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', chunk.file.file_name)
+        print("FTP CLIENT: Received chunk", decoded_chunk.index, 'of', decoded_chunk.chunks_in_file, 'for', decoded_chunk.file.file_name)
+        print(decoded_chunk.data)
+        self.factory.slave.test()
         # file.write_chunk(chunk_index, message['chunk'])
         # Close ftp connection
         # self.chunks_awaiting_update[file.file_name] -= 1
@@ -67,6 +68,7 @@ class TransferClientProtocol(AMP):
 class FTPClient(ClientFactory):
     protocol = TransferClientProtocol
     distant_end = None
+    slave = None
 
 
 class FTPServer(Factory):
@@ -75,11 +77,12 @@ class FTPServer(Factory):
 
 
 class FTPClientCreator:
-    def __init__(self, ip: str, port: int):
+    def __init__(self, ip: str, port: int, slave):
         self.ip = ip
         self.port = port
         self.endpoint = None
         self.factory = FTPClient()
+        self.factory.slave = slave
 
     def start_connect(self):
         self.endpoint = TCP4ClientEndpoint(reactor, self.ip, self.port)
