@@ -18,15 +18,31 @@ class TransferServerProtocol(AMP):
         print('FTP SERVER: Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
         file.file_path = file.get_file_path()
-
+        chunks = self.get_chunks(file.file_path)
         # Return each chunk with its data
         for i in chunks_needed:
             if i != '':
-                chunk = Chunk(int(i), file).encode()
-                self.callRemote(ReceiveChunk, chunk=chunk)
+                chunk = Chunk(int(i), file)
+                # chunk.data = chunks[int(i)]
+                self.callRemote(ReceiveChunk, chunk=chunk.encode())
         return {}
     ServeChunks.responder(serve_chunks)
-# @TODO sever ftp client connection on finish? or did i do this earlier in slave?
+
+    def get_chunks(self, file_path:str) -> dict:
+        buffer = 60000
+        chunks = {}
+        index = 0
+
+        with open(file_path, 'rb') as file:
+            while True:
+                data = file.read(buffer)
+                print(data)
+                if not data:
+                    break
+                chunks[index] = data
+                index += 1
+        print(chunks)
+        return chunks
 
 
 class TransferClientProtocol(AMP):

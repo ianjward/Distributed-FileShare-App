@@ -39,6 +39,10 @@ class ShareFile:
         self.share_name = share_name
         self.file_name = Path(file_path).name
         self.last_mod_time = os.path.getmtime(file_path)
+        self.chunk_hashes = {}
+        self.addresses = {}
+        self.chunks_needed = ''
+
         # db.create_tables([FileData])
 
         self.__hash__()
@@ -78,7 +82,7 @@ class Chunk:
     def __init__(self, index:int, file:ShareFile):
         self.file = file
         self.index = index
-        self.data = file.get_chunk(index)
+        self.data = None
         self.chunks_in_file = file.num_chunks
 
     def encode(self):
