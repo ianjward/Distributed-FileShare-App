@@ -28,7 +28,7 @@ class ShareFile:
     sha1_hash = hashlib.sha1()
     BUF_SIZE = 60000  # 60kb chunks to avoid amp limit for v1
     file_path = ''
-    chunk_hashes = {}
+    chunk_hashes = []
     addresses = {}
     chunks_needed = ''
     update_index = 0

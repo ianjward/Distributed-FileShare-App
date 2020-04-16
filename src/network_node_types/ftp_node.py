@@ -41,7 +41,6 @@ class TransferServerProtocol(AMP):
                     break
                 chunks[index] = data
                 index += 1
-        print(chunks)
         return chunks
 
 
