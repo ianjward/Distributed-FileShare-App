@@ -71,6 +71,13 @@ class ShareFile:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
 
+    def write_chunks(self, received_chunks):
+        # Seek and write chunk data
+        for chunk in received_chunks:
+            with open(chunk.file.file_path, 'wb') as file:
+                file.seek(self.BUF_SIZE * chunk.index)
+                file.write(chunk.data)
+            
     def encode(self):
         return pickle.dumps(self)
 
@@ -105,13 +112,6 @@ class FileManager:
         with open(share_file.file_path, 'wb') as file:
             file.seek(self.BUF_SIZE * share_file.update_index)
             # if share_file.
-
-    def write_chunk(self, share_file: ShareFile, chunk_index: int, data):
-
-        # Seek and write chunk data
-        with open(share_file.file_path, 'wb') as file:
-            file.seek(self.BUF_SIZE * chunk_index)
-            file.write(data)
 
     def get_chunk(self, share_file: ShareFile, chunk_index: int):
         # Seek and return chunk data
