@@ -21,7 +21,8 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
 
     def send_datagram(self, msg:Message):
         broadcast_port = 7999
-        broadcast_ip = '192.168.1.255'
+        # broadcast_ip = '192.168.1.255'
+        broadcast_ip = '255.255.255.255'
         self.transport.write(msg.encode_msg(), (broadcast_ip, broadcast_port))
 
     def datagramReceived(self, encoded_msg, host: tuple):

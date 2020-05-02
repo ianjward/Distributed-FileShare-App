@@ -12,7 +12,7 @@ from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, Open
 
 def cmp_floats(a: float, b: float) -> bool:
     epsilon = .00001
-    return True if abs(a - b) < epsilon else False
+    return True if a - b > epsilon else False
 
 
 class MasterProtocol(AMP):
@@ -90,10 +90,12 @@ class MasterProtocol(AMP):
                 stored_timestamp[i] = stored_timestamp[i] if stored_is_current else file.last_mod_time
                 # @TODO is sha1hash right?
                 stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
+                # print(stored_ips[i], file.addresses[i])
                 stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
 
+            print('MASTER: Stored file', file_name, 'is current:', stored_is_current)
             # Append current status to return string if chunk is uptodate
-            if stored_is_current or stored_matches_file:
+            if stored_is_current: # or stored_matches_file:
                 chunks_to_update += 'current '
                 # altered_ips.add(stored_ips[i])
 
