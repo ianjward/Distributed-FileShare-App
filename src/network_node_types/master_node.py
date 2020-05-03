@@ -66,52 +66,59 @@ class MasterProtocol(AMP):
         file = decode_file(encoded_file)
         file_name = file.file_name
         hashes = file.chunk_hashes
-        chunks_to_update = ''
-        i = 0
+        chnks_to_update = ''
+        chnk_indx = 0
+        update_dict = {}
+        sync_actn = 'none'
+        mstr_has_file = True
+        mstrfile_mtchs_sntfile = False
 
-        # Track any files master has never seen before
+        # Track any files this master has never seen before
         if file_name not in self.factory.tracked_files:
             self.seed_file(encoded_file, sender_ip)
+            mstr_has_file = False
+            # @TODO push to all nodes except sender while seeding
 
-        # Set stored file info if file is being tracked by master
+        # Set master tracking info for file
         stored_ips = self.factory.tracked_files[file_name][1][0]
-        num_stored_chunks = len(stored_ips)
-        stored_timestamp = self.factory.tracked_files[file_name][1][1]
+        stored_num_chnks = len(stored_ips)
+        stored_timestmp = self.factory.tracked_files[file_name][1][1]
         stored_hashes = self.factory.tracked_files[file_name][0]
-        altered_ips = set()
 
-        # Check new hash against stored hash
-        while i < num_stored_chunks:
-            stored_is_current = cmp_floats(stored_timestamp[i], file.last_mod_time)
-            stored_matches_file = stored_ips[i] == sender_ip
+        # Check new file's hashes against stored master hashes
+        while chnk_indx < stored_num_chnks:
+            mstr_file_curr = cmp_floats(stored_timestmp[chnk_indx], file.last_mod_time)
+            # Check if master file matches the file being updates
+            if mstr_has_file:
+                mstrfile_mtchs_sntfile = stored_ips[chnk_indx] == sender_ip
 
             # Choose latest file data to store
-            if stored_hashes[i] != hashes[i]:
-                stored_timestamp[i] = stored_timestamp[i] if stored_is_current else file.last_mod_time
-                # @TODO is sha1hash right?
-                stored_hashes[i] = stored_hashes[i] if stored_is_current else file.sha1_hash
-                # print(stored_ips[i], file.addresses[i])
-                stored_ips[i] = stored_ips[i] if stored_is_current else file.addresses[i]
+            if stored_hashes[chnk_indx] != hashes[chnk_indx]:
+                stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
+                stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
+                stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
 
-            print('MASTER: Stored file', file_name, 'is current:', stored_is_current)
-            # Append current status to return string if chunk is uptodate
-            if stored_is_current: # or stored_matches_file:
-                chunks_to_update += 'current '
-                # altered_ips.add(stored_ips[i])
+            print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
+            # Signal slave to push file
+            if not mstr_file_curr and not mstrfile_mtchs_sntfile:
+                sync_actn = 'push'
+            elif mstr_file_curr and not mstrfile_mtchs_sntfile:
+                sync_actn = 'pull'
 
-            # Append ip with the uptodate chunk if file is outofdate
-            else:
-                chunks_to_update += stored_ips[i] + ' '
-                altered_ips.add(stored_ips[i])
-            i += 1
+            chnks_to_update += str(chnk_indx) + ' '
+            chnk_indx += 1
 
-        # Track any new file chunks
-        while i < file.num_chunks:
-            chunks_to_update += stored_ips[i] + ' '
-            altered_ips.add(stored_ips[i])
-            i += 1
+        # Track any new file chunks appended to end of file
+        while chnk_indx < file.num_chunks:
+            chnks_to_update += str(chnk_indx) + ' '
+            chnk_indx += 1
 
-        return {'update_ips': chunks_to_update}
+        # Initate transfer for all un-updated slaves
+        for ip in self.factory.endpoints.keys():
+            update_dict[ip] = (sync_actn, chnks_to_update)
+
+        print('MASTER: Awaiting', sync_actn,'for', file_name, chnks_to_update)
+        return update_dict
     UpdateFile.responder(update_file)
 
     def print_error(self, error):

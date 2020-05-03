@@ -32,7 +32,7 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
         mtype = msg.mType
 
         if mtype == 'REQST_MSTRS' and valid_sender:
-            print("BROADCAST: Received msg", msg.mType)
+            print("BROADCAST: Received msg", msg.mType, self.available_shares)
             self.send_master_list(sender)
 
         elif mtype == 'MSTR_LIST' and valid_sender:
