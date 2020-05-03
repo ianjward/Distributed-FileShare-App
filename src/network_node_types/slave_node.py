@@ -118,7 +118,7 @@ class SlaveProtocol(AMP):
             file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
         # Push chunks w/ ftp server
         elif file_server is not None and sync_actn == 'push':
-            file_server.callRemote(InitiateServe, encoded_file=file.encode())
+            client.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:

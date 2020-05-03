@@ -15,12 +15,6 @@ class TransferServerProtocol(AMP):
         self.factory.distant_end = self
         print("FTP SERVER: Connected to client")
 
-    def initiate_serve(self, encoded_file):
-        file = decode_file(encoded_file)
-        ip = get_local_ip()
-        self.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=ip)
-    InitiateServe.responder(initiate_serve)
-
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         print('FTP SERVER: Serving file', file.file_name)
