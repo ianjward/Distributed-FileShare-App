@@ -93,8 +93,8 @@ class SlaveProtocol(AMP):
     def update_file(self, update_peers, file: ShareFile):
         # return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
         ips = update_peers['ips'].split(' ')
-        chnks_to_update = update_peers['chnks_to_update'].split(' ')
-        sync_actn = update_peers['sync_actn']
+        chnks_to_update = update_peers['chnks'].split(' ')
+        sync_actn = update_peers['actn']
         chunks = {}
         ips = set()
         self.updating_file = True

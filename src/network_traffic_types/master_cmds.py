@@ -4,9 +4,9 @@ from twisted.protocols.amp import AMP, Command, Unicode, String, Integer, Float
 class UpdateFile(Command):
     arguments = [('encoded_file'.encode(), String()),
                  ('sender_ip'.encode(), Unicode())]
-    response = [('ips'.encode(), String()),
-                ('chnks'.encode(), String()),
-                ('actn'.encode(), String())]
+    response = [('ips'.encode(), Unicode()),
+                ('chnks'.encode(), Unicode()),
+                ('actn'.encode(), Unicode())]
 
 
 class SeedFile(Command):
