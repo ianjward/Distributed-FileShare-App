@@ -8,3 +8,7 @@ class ServeChunks(Command):
 
 class ReceiveChunk(Command):
     arguments = [('chunk'.encode(), String())]
+
+
+class InitiateServe(Command):
+    arguments = [('encoded_file'.encode(), String())]

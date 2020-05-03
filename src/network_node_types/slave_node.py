@@ -6,7 +6,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEven
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
-from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk
+from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
@@ -89,7 +89,6 @@ class SlaveProtocol(AMP):
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, update_peers, file: ShareFile):
-        # return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
         ips = update_peers['ips'].split(' ')
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
@@ -113,10 +112,13 @@ class SlaveProtocol(AMP):
             attempts += 1
             deferLater(reactor, 1, self.connect_to_ftp, client, ip, attempts, file)
 
-        # Update chunks w/ ftp server
+        # Pull chunks w/ ftp server
         if file_server is not None and sync_actn == 'pull':
             self.chunks_awaiting_update[file.file_name] = file.awaiting_chunks
             file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+        # Push chunks w/ ftp server
+        elif file_server is not None and sync_actn == 'push':
+            file_server.callRemote(InitiateServe, encoded_file=file.encode())
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:

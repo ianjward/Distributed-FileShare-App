@@ -116,7 +116,6 @@ class FileManager:
         share_file = self.queue.get()
         with open(share_file.file_path, 'wb') as file:
             file.seek(self.BUF_SIZE * share_file.update_index)
-            # if share_file.
 
     def get_chunk(self, share_file: ShareFile, chunk_index: int):
         # Seek and return chunk data

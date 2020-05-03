@@ -3,7 +3,7 @@ from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint, c
 from twisted.internet.protocol import ClientFactory, Factory
 from twisted.protocols.amp import AMP
 from src.utilities.file_manager import Chunk, decode_chunk
-from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk
+from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.utilities.file_manager import decode_file, ShareFile
 
 
@@ -12,6 +12,10 @@ class TransferServerProtocol(AMP):
     def connectionMade(self):
         self.factory.distant_end = self
         print("FTP SERVER: Connected to client")
+
+    def initiate_serve(self, file):
+        self.callRemote(ServeChunks, encoded_file=file, sender_ip=self.get_local_ip())
+    InitiateServe.responder(initiate_serve())
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
@@ -28,7 +32,7 @@ class TransferServerProtocol(AMP):
         return {}
     ServeChunks.responder(serve_chunks)
 
-    def get_chunks(self, file_path:str) -> dict:
+    def get_chunks(self, file_path: str) -> dict:
         buffer = 60000
         chunks = {}
         index = 0
