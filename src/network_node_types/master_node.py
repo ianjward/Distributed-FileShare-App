@@ -66,9 +66,9 @@ class MasterProtocol(AMP):
         file = decode_file(encoded_file)
         file_name = file.file_name
         hashes = file.chunk_hashes
+        ips = ''
         chnks_to_update = ''
         chnk_indx = 0
-        update_dict = {}
         sync_actn = 'none'
         mstr_has_file = True
         mstrfile_mtchs_sntfile = False
@@ -113,12 +113,14 @@ class MasterProtocol(AMP):
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
 
-        # Initate transfer for all un-updated slaves
-        for ip in self.factory.endpoints.keys():
-            update_dict[ip] = (sync_actn, chnks_to_update)
-
+        # Add ips to push to
+        if sync_actn == 'push':
+            for ip in self.factory.endpoints.keys():
+                ips += str(ip)
+        else:
+            ips = self.factory.tracked_files[file_name][1][0]
         print('MASTER: Awaiting', sync_actn,'for', file_name, chnks_to_update)
-        return update_dict
+        return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
     UpdateFile.responder(update_file)
 
     def print_error(self, error):

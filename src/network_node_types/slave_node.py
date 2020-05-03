@@ -90,15 +90,18 @@ class SlaveProtocol(AMP):
         # @TODO close ftp and reset chunks needed
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
-    def update_file(self, updated_files, file: ShareFile):
-        file_statuses = updated_files['update_ips']
+    def update_file(self, update_peers, file: ShareFile):
+        # return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
+        ips = update_peers['ips'].split(' ')
+        chnks_to_update = update_peers['chnks_to_update'].split(' ')
+        sync_actn = update_peers['sync_actn']
         chunks = {}
         ips = set()
         self.updating_file = True
-        self.sort_statuses(file_statuses.split(' '), chunks)
-        print(chunks)
+        print(chnks_to_update)
+        print(ips)
         # Connect to nodes with chunk if there are changes to make
-        if bool(chunks):
+        if bool(chnks_to_update):
             # Get unique set of ips to connect to for updates
             for value in chunks.values():
                 ips.add(value)
@@ -109,14 +112,6 @@ class SlaveProtocol(AMP):
                 client = FTPClientCreator(ip, 8000, self)
                 client.start_connect()
                 deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)
-
-    def sort_statuses(self, statuses: [], chunks: dict):
-        i = 0
-        # Sort uptodate files from outofdate files
-        for status in statuses:
-            if status != 'current' and status != '':
-                chunks[i] = status
-                i += 1
 
     def connect_to_ftp(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
         file_server = client.factory.distant_end
