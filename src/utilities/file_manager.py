@@ -34,6 +34,7 @@ class ShareFile:
     update_index = 0
     update_data = None
     num_chunks = 0
+    awaiting_chunks = 0
 
     def __init__(self, file_path: str, share_name: str):
         self.share_name = share_name
@@ -72,10 +73,13 @@ class ShareFile:
             return file.read(self.BUF_SIZE)
 
     def write_chunks(self, received_chunks):
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', 'test.txt')
+
         # Seek and write chunk data
         for chunk in received_chunks:
-            print('attempting to write chunk', chunk.data)
-            with open(chunk.file.file_path, 'wb') as file:
+            print('FILE MANAGER: Attempting to write chunk:', chunk.data)
+            with open(path, 'wb') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
 
@@ -119,6 +123,8 @@ class FileManager:
         with open(share_file.file_path, 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
+
+
 # class FileData(Model):
 #     file_name = TextField()
 #     chunk_index = IntegerField()
@@ -183,9 +189,3 @@ def start_file_monitor(slave):
         observer.stop()
 
     observer.join()
-
-
-# def create_file(self):
-#     file = open("test.txt", "w+")
-#     file.write("hello world")
-#     file.close()

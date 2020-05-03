@@ -72,18 +72,16 @@ class SlaveProtocol(AMP):
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
-        # @TODO push all files master doesn't have
-        # @TODO figure out how to batch events
         monitor_file_changes(self)
 
-    def receive_chunk(self, chunk:Chunk):
+    def receive_chunk(self, chunk: Chunk):
         file_name = chunk.file.file_name
         chunks_remaining = self.chunks_awaiting_update[file_name] - 1
         self.received_chunks.append(chunk)
         self.chunks_awaiting_update[file_name] -= 1
-        print('received chunk')
         # Write to file if all chunks received
         if chunks_remaining == 0:
+            print('SLAVE: Received all chunks for', file_name)
             chunk.file.write_chunks(self.received_chunks)
         self.close_ftp(self.chunks_awaiting_update[file_name], chunk.file)
 
@@ -93,51 +91,36 @@ class SlaveProtocol(AMP):
     def update_file(self, update_peers, file: ShareFile):
         # return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
         ips = update_peers['ips'].split(' ')
-        chnks_to_update = update_peers['chnks_to_update'].split(' ')
-        sync_actn = update_peers['sync_actn']
-        chunks = {}
-        ips = set()
+        file.chunks_needed = update_peers['chnks']
+        total_chnks = file.chunks_needed.split(' ')
+        total_chnks.remove('')
+        file.awaiting_chunks = len(total_chnks)
+        sync_actn = update_peers['actn']
         self.updating_file = True
-        print(chnks_to_update)
-        print(ips)
-        # Connect to nodes with chunk if there are changes to make
-        if bool(chnks_to_update):
-            # Get unique set of ips to connect to for updates
-            for value in chunks.values():
-                ips.add(value)
 
-            # Connect to each needed update node
-            for ip in ips:
-                print(ip)
-                client = FTPClientCreator(ip, 8000, self)
-                client.start_connect()
-                deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, 0, file)
+        # Connect to each needed update node
+        for ip in ips:
+            client = FTPClientCreator(ip, 8000, self)
+            client.start_connect()
+            deferLater(reactor, 1, self.connect_to_ftp, client, ip, 0, file, sync_actn)
 
-    def connect_to_ftp(self, client, chunks: dict, ip: str, attempts: int, file: ShareFile):
+    def connect_to_ftp(self, client, ip: str, attempts: int, file: ShareFile, sync_actn: str):
         file_server = client.factory.distant_end
 
         # Attempt to reconnect to ftp server
         if file_server is None and attempts < 5:
             client.start_connect()
             attempts += 1
-            deferLater(reactor, 1, self.connect_to_ftp, client, chunks, ip, attempts, file)
+            deferLater(reactor, 1, self.connect_to_ftp, client, ip, attempts, file)
 
         # Update chunks w/ ftp server
-        if file_server is not None:
-            self.update_chunks(file_server, chunks, ip, file)
+        if file_server is not None and sync_actn == 'pull':
+            self.chunks_awaiting_update[file.file_name] = file.awaiting_chunks
+            file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
-
-    def update_chunks(self, file_server, chunks: dict, ip:str, file: ShareFile):
-        self.chunks_awaiting_update[file.file_name] = len(chunks.values())
-
-        # Send for updated chunk and update upon return
-        for key, value in chunks.items():
-            if value == ip:
-                file.chunks_needed += (' ' + str(key))
-        file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
 
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):
         file_name = file.file_name
