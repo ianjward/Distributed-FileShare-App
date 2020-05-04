@@ -114,11 +114,8 @@ class SlaveProtocol(AMP):
 
     def update_file(self, update_peers, file: ShareFile):
         file.chunks_needed = update_peers['chnks']
-        print('CHUNKS NEEDED', file.file_name, file.chunks_needed)
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')
-        print('TOTALCHNKS',total_chnks)
-        print(len(total_chnks))
         file.awaiting_chunks = len(total_chnks)
         sync_actn = update_peers['actn']
         ip = update_peers['ips']
