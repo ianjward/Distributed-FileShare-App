@@ -119,6 +119,8 @@ class SlaveProtocol(AMP):
         # Push chunks w/ ftp server
         elif file_server is not None and sync_actn == 'push':
             file_server.callRemote(InitiateServe, encoded_file=file.encode())
+        elif sync_actn == 'none':
+            print('SLAVE:', file.file_name, 'up to date no action needed')
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:
