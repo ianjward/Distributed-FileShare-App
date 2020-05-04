@@ -12,3 +12,12 @@ class ReceiveChunk(Command):
 
 class InitiateServe(Command):
     arguments = [('encoded_file'.encode(), String())]
+
+
+class ClientServeChunks(Command):
+    arguments = [('encoded_file'.encode(), String()),
+                 ('sender_ip'.encode(), Unicode())]
+
+
+class ClientReceiveChunk(Command):
+    arguments = [('chunk'.encode(), String())]

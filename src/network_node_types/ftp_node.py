@@ -5,7 +5,8 @@ from twisted.protocols.amp import AMP
 
 import src
 from src.utilities.file_manager import Chunk, decode_chunk
-from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
+from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe, ClientServeChunks, \
+    ClientReceiveChunk
 from src.utilities.file_manager import decode_file, ShareFile
 
 
@@ -17,7 +18,8 @@ class TransferServerProtocol(AMP):
 
     def initiate_serve(self, encoded_file):
         file = decode_file(encoded_file)
-        self.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+        self.callRemote(ClientServeChunks, encoded_file=file.encode(), sender_ip=get_local_ip())
+        return {}
     InitiateServe.responder(initiate_serve)
 
     def serve_chunks(self, encoded_file, sender_ip):
@@ -62,7 +64,7 @@ class TransferClientProtocol(AMP):
               decoded_chunk.file.file_name, 'Data:', decoded_chunk.data)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
-    ReceiveChunk.responder(receive_chunk)
+    ClientReceiveChunk.responder(receive_chunk)
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
@@ -77,7 +79,7 @@ class TransferClientProtocol(AMP):
                 chunk.data = chunks[int(i)]
                 self.callRemote(ReceiveChunk, chunk=chunk.encode())
         return {}
-    ServeChunks.responder(serve_chunks)
+    ClientServeChunks.responder(serve_chunks)
 
     def get_chunks(self, file_path: str) -> dict:
         buffer = 60000
