@@ -82,13 +82,19 @@ class ShareFile:
         received_chunks = slave.received_chunks
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-        # Seek and write chunk data
+                # Seek and write chunk data
+        # for chunk in received_chunks:
+        #     print('FILE MANAGER: Attempting to write chunk!:', chunk.index)
+        #     with open(path, 'wb') as file:
+        #         file.seek(self.BUF_SIZE * chunk.index)
+        #         file.write(chunk.data)
+        #         slave.update_file = False
         for chunk in received_chunks:
             print('FILE MANAGER: Attempting to write chunk!:', chunk.index)
             with open(path, 'wb') as file:
-                file.seek(self.BUF_SIZE * chunk.index)
+                # file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
-                slave.update_file = False
+        slave.update_file = False
 
     def encode(self):
         return pickle.dumps(self)
