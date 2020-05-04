@@ -23,6 +23,7 @@ class TransferServerProtocol(AMP):
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
+        print(file.awaiting_chunks)
         print('FTP SERVER:', get_local_ip(), 'Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
         file.file_path = file.get_file_path()
@@ -56,7 +57,7 @@ class TransferServerProtocol(AMP):
             self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
         print("FTP CLIENT: Received chunk",
               decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
-              decoded_chunk.file.file_name, 'Data:', decoded_chunk.data)
+              decoded_chunk.file.file_name)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)
@@ -71,9 +72,9 @@ class TransferClientProtocol(AMP):
         decoded_chunk = decode_chunk(chunk)
         if decoded_chunk.file.file_name not in self.factory.slave.chunks_awaiting_update.keys():
             self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
-        print("FTP CLIENT: Received chunk",
+        print("FTP CLIENT1: Received chunk",
               decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
-              decoded_chunk.file.file_name, 'Data:', decoded_chunk.data)
+              decoded_chunk.file.file_name)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)

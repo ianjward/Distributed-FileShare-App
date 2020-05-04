@@ -39,14 +39,20 @@ class ShareFile:
     def __init__(self, file_path: str, share_name: str):
         self.share_name = share_name
         self.file_name = Path(file_path).name
-        self.last_mod_time = os.path.getmtime(file_path)
-        self.chunk_hashes = {}
-        self.addresses = {}
-        self.chunks_needed = ''
-
+        try:
+            self.last_mod_time = os.path.getmtime(file_path)
+            self.chunk_hashes = {}
+            self.addresses = {}
+            self.chunks_needed = ''
+            self.__hash__()
+        except:
+            self.chunk_hashes = {}
+            self.addresses = {}
+            self.chunks_needed = ''
+            open(self.get_file_path(), 'w+')
+            self.__hash__()
+            self.last_mod_time = 0
         # db.create_tables([FileData])
-
-        self.__hash__()
 
     def __hash__(self):
         index = 0
@@ -76,10 +82,9 @@ class ShareFile:
         received_chunks = slave.received_chunks
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-
         # Seek and write chunk data
         for chunk in received_chunks:
-            print('FILE MANAGER: Attempting to write chunk:', chunk.data)
+            print('FILE MANAGER: Attempting to write chunk!:', chunk.index)
             with open(path, 'wb') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
@@ -93,7 +98,7 @@ class ShareFile:
 
 
 class Chunk:
-    def __init__(self, index:int, file:ShareFile):
+    def __init__(self, index:int, file: ShareFile):
         self.file = file
         self.index = index
         self.data = None

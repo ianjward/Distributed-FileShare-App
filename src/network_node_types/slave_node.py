@@ -114,8 +114,11 @@ class SlaveProtocol(AMP):
 
     def update_file(self, update_peers, file: ShareFile):
         file.chunks_needed = update_peers['chnks']
+        print('CHUNKS NEEDED', file.file_name, file.chunks_needed)
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')
+        print('TOTALCHNKS',total_chnks)
+        print(len(total_chnks))
         file.awaiting_chunks = len(total_chnks)
         sync_actn = update_peers['actn']
         ip = update_peers['ips']
@@ -178,13 +181,16 @@ class SlaveProtocol(AMP):
         return src.utilities.networking.get_local_ip_address()
 
     def file_created(self, event: FileCreatedEvent):
-        print(event.src_path, event.event_type)
+        i = 0
+        # print(event.src_path, event.event_type)
 
     def file_deleted(self, event: FileDeletedEvent):
-        print(event.src_path, event.event_type)
+        # print(event.src_path, event.event_type)
+        i=0
 
     def file_modified(self, event: FileModifiedEvent):
-        print(event.src_path, event.event_type)
+        i=0
+        # print(event.src_path, event.event_type)
         # if not self.updating_file:
         #     self.update_file(event.src_path)
 
