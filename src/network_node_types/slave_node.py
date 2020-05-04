@@ -1,5 +1,7 @@
 import glob
 import os
+from pathlib import Path
+
 from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
@@ -8,12 +10,9 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
-
-
-# chunks_to_receive = {}
 
 
 class SlaveProtocol(AMP):
@@ -74,7 +73,22 @@ class SlaveProtocol(AMP):
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
+
+        master_files = self.callRemote(GetFileList)
+        master_files.addCallback(self.update_untracked_files)
         monitor_file_changes(self)
+
+    def update_untracked_files(self, master_dict):
+        file_string = master_dict['files']
+        mastr_files = file_string.split(' ')
+        mastr_files.remove('')
+
+        local_files = []
+        share_path = os.path.normpath(os.getcwd(), os.sep, os.pardir)
+        share_path = os.path.join(share_path, 'monitored_files', 'ians_share')
+
+        for file in os.listdir(share_path):
+            local_files.append(Path(file).name)
 
     def receive_chunk(self, chunk: Chunk):
         file_name = chunk.file.file_name

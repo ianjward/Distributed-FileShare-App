@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint
 from twisted.protocols.amp import AMP
 from twisted.python.log import err
@@ -5,9 +7,10 @@ import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
+from os import listdir
 
 
 def cmp_floats(a: float, b: float) -> bool:
@@ -133,6 +136,16 @@ class MasterProtocol(AMP):
     def print_error(self, error):
         print(error)
 
+    def get_file_list(self):
+        files = ''
+        share_path = os.path.normpath(os.getcwd(), os.sep, os.pardir)
+        share_path = os.path.join(share_path, 'monitored_files', 'ians_share')
+
+        for file in listdir(share_path):
+            files += Path(file).name + ' '
+        print(files)
+        return {'files': files}
+    GetFileList.responder(get_file_list)
 
 class MasterNode(Factory):
     protocol = MasterProtocol
