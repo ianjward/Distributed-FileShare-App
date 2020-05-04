@@ -17,7 +17,7 @@ class TransferServerProtocol(AMP):
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
-        print('FTP SERVER: Serving file', file.file_name)
+        print('FTP SERVER:', get_local_ip(), 'Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
         file.file_path = file.get_file_path()
         chunks = self.get_chunks(file.file_path)
@@ -58,6 +58,35 @@ class TransferClientProtocol(AMP):
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)
+
+    def serve_chunks(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        print('FTP SERVER: Serving file', file.file_name)
+        chunks_needed = file.chunks_needed.split(' ')
+        file.file_path = file.get_file_path()
+        chunks = self.get_chunks(file.file_path)
+        # Return each chunk with its data
+        for i in chunks_needed:
+            if i != '':
+                chunk = Chunk(int(i), file)
+                chunk.data = chunks[int(i)]
+                self.callRemote(ReceiveChunk, chunk=chunk.encode())
+        return {}
+    ServeChunks.responder(serve_chunks)
+
+    def get_chunks(self, file_path: str) -> dict:
+        buffer = 60000
+        chunks = {}
+        index = 0
+
+        with open(file_path, 'rb') as file:
+            while True:
+                data = file.read(buffer)
+                if not data:
+                    break
+                chunks[index] = data
+                index += 1
+        return chunks
 
 
 class FTPClient(ClientFactory):

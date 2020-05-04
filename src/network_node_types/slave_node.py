@@ -27,6 +27,8 @@ class SlaveProtocol(AMP):
         self.chunks_awaiting_update = {}
         self.updating_file = False
         self.received_chunks = []
+        self.client = None
+
         print("SLAVE: Talking to Master at", self.master_ip, ':', self.factory.port)
 
     def authenticate(self):
@@ -89,28 +91,26 @@ class SlaveProtocol(AMP):
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, update_peers, file: ShareFile):
-        ips = update_peers['ips'].split(' ')
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')
         file.awaiting_chunks = len(total_chnks)
         sync_actn = update_peers['actn']
+        ip = update_peers['ips']
         self.updating_file = True
 
-        # Connect to each needed update node
-        for ip in ips:
-            client = FTPClientCreator(ip, 8000, self)
-            client.start_connect()
-            deferLater(reactor, 1, self.connect_to_ftp, client, ip, 0, file, sync_actn)
+        if self.client is None:
+            self.client = FTPClientCreator(ip, 8000, self)
+            self.client.start_connect()
+        deferLater(reactor, 1, self.connect_to_ftp, self.client, ip, 0, file, sync_actn)
 
     def connect_to_ftp(self, client, ip: str, attempts: int, file: ShareFile, sync_actn: str):
         file_server = client.factory.distant_end
-
         # Attempt to reconnect to ftp server
         if file_server is None and attempts < 5:
-            client.start_connect()
+            self.client.start_connect()
             attempts += 1
-            deferLater(reactor, 1, self.connect_to_ftp, client, ip, attempts, file)
+            deferLater(reactor, 1, self.connect_to_ftp, self.client, ip, attempts, file)
 
         # Pull chunks w/ ftp server
         if file_server is not None and sync_actn == 'pull':
@@ -118,7 +118,7 @@ class SlaveProtocol(AMP):
             file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
         # Push chunks w/ ftp server
         elif file_server is not None and sync_actn == 'push':
-            client.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+            file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:
