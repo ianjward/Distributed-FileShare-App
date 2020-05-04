@@ -108,7 +108,7 @@ class MasterProtocol(AMP):
                 stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
                 stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
                 stored_ips[chnk_indx] = stored_ips[chnk_indx]
-                
+                mstrfile_mtchs_sntfile = False
             print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
             # Signal slave to push file
             if not mstr_file_curr and not mstrfile_mtchs_sntfile:
