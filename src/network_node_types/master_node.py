@@ -99,11 +99,16 @@ class MasterProtocol(AMP):
                 mstrfile_mtchs_sntfile = stored_ips[chnk_indx] == sender_ip
 
             # Choose latest file data to store
-            if stored_hashes[chnk_indx] != hashes[chnk_indx]:
-                stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
-                stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
-                stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
-
+            try:
+                if stored_hashes[chnk_indx] != hashes[chnk_indx]:
+                    stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
+                    stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
+                    stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
+            except:
+                stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
+                stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
+                stored_ips[chnk_indx] = stored_ips[chnk_indx]
+                
             print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
             # Signal slave to push file
             if not mstr_file_curr and not mstrfile_mtchs_sntfile:
