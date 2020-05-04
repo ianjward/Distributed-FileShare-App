@@ -119,7 +119,6 @@ class MasterProtocol(AMP):
                 ips += str(ip) + ' '
         # Add ips to pull from
         else:
-            print(self.factory.tracked_files[file_name][1][0][0])
             ips = self.factory.tracked_files[file_name][1][0][0]
         print('MASTER: Awaiting', sync_actn,'for', file_name, chnks_to_update)
         return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
