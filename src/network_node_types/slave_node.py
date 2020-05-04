@@ -90,6 +90,14 @@ class SlaveProtocol(AMP):
         for file in os.listdir(path):
             local_files.append(Path(file).name)
 
+        for file in mastr_files:
+            if file not in local_files:
+                share_file = ShareFile(file, self.share_name)
+                self.files.append(share_file)
+                update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+                update.addCallback(self.update_file, share_file)
+                print('SLAVE: Updating file', share_file.file_name)
+
     def receive_chunk(self, chunk: Chunk):
         file_name = chunk.file.file_name
         chunks_remaining = self.chunks_awaiting_update[file_name] - 1
