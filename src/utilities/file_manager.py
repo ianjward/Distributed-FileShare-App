@@ -108,7 +108,7 @@ class Chunk:
         self.file = file
         self.index = index
         self.data = None
-        self.chunks_in_file = file.num_chunks
+        self.chunks_in_file = file.awaiting_chunks
 
     def encode(self):
         return pickle.dumps(self)
