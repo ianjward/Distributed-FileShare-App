@@ -84,7 +84,7 @@ class SlaveProtocol(AMP):
         # Write to file if all chunks received
         if chunks_remaining == 0:
             print('SLAVE: Received all chunks for', file_name)
-            chunk.file.write_chunks(self.received_chunks)
+            chunk.file.write_chunks(self)
         self.close_ftp(self.chunks_awaiting_update[file_name], chunk.file)
 
         # @TODO close ftp and reset chunks needed
@@ -118,7 +118,7 @@ class SlaveProtocol(AMP):
             file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
         # Push chunks w/ ftp server
         elif file_server is not None and sync_actn == 'push':
-            file_server.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+            file_server.callRemote(InitiateServe, encoded_file=file.encode())
 
         # Give up on ftp server connection after 5 tries
         if attempts > 5:

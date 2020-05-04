@@ -72,7 +72,8 @@ class ShareFile:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
 
-    def write_chunks(self, received_chunks):
+    def write_chunks(self, slave):
+        received_chunks = slave.received_chunks
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', 'test.txt')
 
@@ -82,6 +83,7 @@ class ShareFile:
             with open(path, 'wb') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
+                slave.update_file = False
 
     def encode(self):
         return pickle.dumps(self)
