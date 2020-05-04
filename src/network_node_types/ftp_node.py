@@ -23,7 +23,6 @@ class TransferServerProtocol(AMP):
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
-        print(file.awaiting_chunks)
         print('FTP SERVER:', get_local_ip(), 'Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
         file.file_path = file.get_file_path()
