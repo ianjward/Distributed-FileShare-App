@@ -5,8 +5,7 @@ from twisted.protocols.amp import AMP
 
 import src
 from src.utilities.file_manager import Chunk, decode_chunk
-from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe, ClientServeChunks, \
-    ClientReceiveChunk
+from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.utilities.file_manager import decode_file, ShareFile
 
 
@@ -18,7 +17,7 @@ class TransferServerProtocol(AMP):
 
     def initiate_serve(self, encoded_file):
         file = decode_file(encoded_file)
-        self.callRemote(ClientServeChunks, encoded_file=file.encode(), sender_ip=get_local_ip())
+        self.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=get_local_ip())
         return {}
     InitiateServe.responder(initiate_serve)
 
@@ -51,6 +50,17 @@ class TransferServerProtocol(AMP):
                 index += 1
         return chunks
 
+    def receive_chunk(self, chunk):
+        decoded_chunk = decode_chunk(chunk)
+        if decoded_chunk.file.file_name not in self.factory.slave.chunks_awaiting_update.keys():
+            self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
+        print("FTP CLIENT: Received chunk",
+              decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
+              decoded_chunk.file.file_name, 'Data:', decoded_chunk.data)
+        self.factory.slave.receive_chunk(decoded_chunk)
+        return {}
+    ReceiveChunk.responder(receive_chunk)
+
 
 class TransferClientProtocol(AMP):
     def connectionMade(self):
@@ -59,12 +69,14 @@ class TransferClientProtocol(AMP):
 
     def receive_chunk(self, chunk):
         decoded_chunk = decode_chunk(chunk)
+        if decoded_chunk.file.file_name not in self.factory.slave.chunks_awaiting_update.keys():
+            self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
         print("FTP CLIENT: Received chunk",
               decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
               decoded_chunk.file.file_name, 'Data:', decoded_chunk.data)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
-    ClientReceiveChunk.responder(receive_chunk)
+    ReceiveChunk.responder(receive_chunk)
 
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
@@ -79,7 +91,7 @@ class TransferClientProtocol(AMP):
                 chunk.data = chunks[int(i)]
                 self.callRemote(ReceiveChunk, chunk=chunk.encode())
         return {}
-    ClientServeChunks.responder(serve_chunks)
+    ServeChunks.responder(serve_chunks)
 
     def get_chunks(self, file_path: str) -> dict:
         buffer = 60000
@@ -105,6 +117,7 @@ class FTPClient(ClientFactory):
 class FTPServer(Factory):
     protocol = TransferServerProtocol
     distant_end = None
+    slave = None
 
 
 class FTPClientCreator:
@@ -120,9 +133,11 @@ class FTPClientCreator:
         return self.endpoint.connect(self.factory)
 
 
-def create_ftp_server(port: int):
+def create_ftp_server(port: int, slave):
     new_endpoint = TCP4ServerEndpoint(reactor, port)
-    return new_endpoint.listen(FTPServer())
+    server = FTPServer()
+    server.slave = slave
+    return new_endpoint.listen(server)
 
 
 def get_local_ip():

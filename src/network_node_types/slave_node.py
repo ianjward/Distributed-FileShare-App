@@ -84,7 +84,7 @@ class SlaveProtocol(AMP):
         # Write to file if all chunks received
         if chunks_remaining == 0:
             print('SLAVE: Received all chunks for', file_name)
-            chunk.file.write_chunks(self)
+            chunk.file.write_chunks(self, file_name)
         self.close_ftp(self.chunks_awaiting_update[file_name], chunk.file)
 
         # @TODO close ftp and reset chunks needed
@@ -134,6 +134,8 @@ class SlaveProtocol(AMP):
             # @TODO close connection here
 
         if awaiting_chunks == 0:
+            # @TODO might not need
+            self.received_chunks = []
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
             print('SLAVE: Updated all chunks for', file_name, 'closing ftp connection')
@@ -141,7 +143,7 @@ class SlaveProtocol(AMP):
         file.__hash__()
 
     def open_ftp_server(self):
-        create_ftp_server(8000)
+        create_ftp_server(8000, self)
         return {}
     OpenTransferServer.responder(open_ftp_server)
 

@@ -72,10 +72,10 @@ class ShareFile:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
 
-    def write_chunks(self, slave):
+    def write_chunks(self, slave, file_name):
         received_chunks = slave.received_chunks
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', 'test.txt')
+        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
 
         # Seek and write chunk data
         for chunk in received_chunks:
