@@ -108,7 +108,12 @@ class MasterProtocol(AMP):
                 stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
                 stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
                 stored_ips[chnk_indx] = stored_ips[chnk_indx]
+                mstr_file_curr = True
                 mstrfile_mtchs_sntfile = False
+                while chnk_indx < stored_num_chnks-1:
+                    chnks_to_update += str(chnk_indx) + ' '
+                    chnk_indx += 1
+
             print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
             # Signal slave to push file
             if not mstr_file_curr and not mstrfile_mtchs_sntfile:
@@ -135,6 +140,7 @@ class MasterProtocol(AMP):
         ip = self.dist_ip
         if sender_ip == self.dist_ip:
             ip = self.factory.ip
+        print(chnks_to_update)
         return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     UpdateFile.responder(update_file)
 
