@@ -16,10 +16,11 @@ def cmp_floats(a: float, b: float) -> bool:
 
 
 class MasterProtocol(AMP):
+
     def connectionMade(self):
+        self.dist_ip = self.factory.ip
         print("MASTER: New connection detected!")
         print("MASTER: Requesting authentication")
-        # deferLater(reactor, 1, self.simpleSub, 5, 2)
 
         self.update_broadcasted_shares()
         self.request_auth()
@@ -42,6 +43,8 @@ class MasterProtocol(AMP):
         if creds['share_password'] == self.factory.access_code:
             port = creds['sender_port']
             ip = creds['sender_ip']
+            if ip != self.factory.ip:
+                self.dist_ip = ip
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
             self.factory.endpoints[ip] = self
             self.callRemote(AuthAccepted)
@@ -119,10 +122,12 @@ class MasterProtocol(AMP):
                 ips += str(ip) + ' '
         # Add ips to pull from
         else:
-            print(self.factory.tracked_files[file_name][1][0][0])
             ips = self.factory.tracked_files[file_name][1][0][0]
         print('MASTER: Awaiting', sync_actn,'for', file_name, chnks_to_update)
-        return {'ips': ips, 'chnks': chnks_to_update, 'actn': sync_actn}
+        ip = self.dist_ip
+        if sender_ip == self.dist_ip:
+            ip = self.factory.ip
+        return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     UpdateFile.responder(update_file)
 
     def print_error(self, error):
