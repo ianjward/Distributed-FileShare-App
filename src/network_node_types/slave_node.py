@@ -84,10 +84,10 @@ class SlaveProtocol(AMP):
         mastr_files.remove('')
 
         local_files = []
-        share_path = os.path.normpath(os.getcwd(), os.sep, os.pardir)
-        share_path = os.path.join(share_path, 'monitored_files', 'ians_share')
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share')
 
-        for file in os.listdir(share_path):
+        for file in os.listdir(path):
             local_files.append(Path(file).name)
 
     def receive_chunk(self, chunk: Chunk):

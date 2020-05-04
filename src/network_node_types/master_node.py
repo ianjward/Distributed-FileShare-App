@@ -138,10 +138,11 @@ class MasterProtocol(AMP):
 
     def get_file_list(self):
         files = ''
-        share_path = os.path.normpath(os.getcwd(), os.sep, os.pardir)
-        share_path = os.path.join(share_path, 'monitored_files', 'ians_share')
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share')
 
-        for file in listdir(share_path):
+
+        for file in listdir(path):
             files += Path(file).name + ' '
         print(files)
         return {'files': files}
