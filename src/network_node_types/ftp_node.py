@@ -70,7 +70,7 @@ class TransferClientProtocol(AMP):
         decoded_chunk = decode_chunk(chunk)
         if decoded_chunk.file.file_name not in self.factory.slave.chunks_awaiting_update.keys():
             self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
-        print("FTP CLIENT1: Received chunk",
+        print("FTP CLIENT: Received chunk",
               decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
               decoded_chunk.file.file_name)
         self.factory.slave.receive_chunk(decoded_chunk)

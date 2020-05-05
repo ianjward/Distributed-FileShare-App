@@ -84,7 +84,8 @@ class ShareFile:
         # Seek and write chunk data
         for chunk in received_chunks:
             print('FILE MANAGER: Attempting to write chunk:', chunk.index)
-            with open(path, 'w+b') as file:
+            print(received_chunks[chunk.index].data)
+            with open(path, 'r+b') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
         slave.update_file = False
@@ -120,7 +121,7 @@ class FileManager:
 
     def update_queue(self):
         share_file = self.queue.get()
-        with open(share_file.file_path, 'wb') as file:
+        with open(share_file.file_path, 'w+b') as file:
             file.seek(self.BUF_SIZE * share_file.update_index)
 
     def get_chunk(self, share_file: ShareFile, chunk_index: int):
