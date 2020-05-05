@@ -77,14 +77,12 @@ class ShareFile:
 
     def write_chunks(self, slave, file_name):
         received_chunks = slave.received_chunks
-        print(received_chunks)
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
 
         # Seek and write chunk data
         for chunk in received_chunks:
             print('FILE MANAGER: Attempting to write chunk:', chunk.index)
-            print(received_chunks[chunk.index].data)
             with open(path, 'r+b') as file:
                 file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
@@ -113,7 +111,7 @@ class FileManager:
     queue = defer.DeferredQueue()
 
     def __init__(self):
-        print('created file manager')
+        print('FILE MANAGER: Initialized self')
 
     def update_file(self, share_file: ShareFile):
         self.queue.put(share_file)
@@ -158,6 +156,7 @@ class FileWatcher(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         self.process(event)
+        time.sleep(5)
 
     def on_created(self, event):
         self.process(event)

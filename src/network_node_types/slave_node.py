@@ -175,8 +175,13 @@ class SlaveProtocol(AMP):
         return src.utilities.networking.get_local_ip_address()
 
     def file_created(self, event: FileCreatedEvent):
-        i = 0
-        # print(event.src_path, event.event_type)
+        print(event.src_path, event.event_type)
+
+        share_file = ShareFile(event.src_path, self.share_name)
+        self.files.append(share_file)
+        update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+        update.addCallback(self.update_file, share_file)
+        print('SLAVE: Created and updating file', share_file.file_name)
 
     def file_deleted(self, event: FileDeletedEvent):
         # print(event.src_path, event.event_type)
