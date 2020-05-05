@@ -83,9 +83,15 @@ class ShareFile:
         # Seek and write chunk data
         for chunk in received_chunks:
             print('FILE MANAGER: Attempting to write chunk:', chunk.index)
-            with open(path, 'r+b') as file:
-                file.seek(self.BUF_SIZE * chunk.index)
-                file.write(chunk.data)
+            try:
+                with open(path, 'r+b') as file:
+                    file.seek(self.BUF_SIZE * chunk.index)
+                    file.write(chunk.data)
+            except FileNotFoundError:
+                open(path, 'w+')
+                with open(path, 'r+b') as file:
+                    file.seek(self.BUF_SIZE * chunk.index)
+                    file.write(chunk.data)
         slave.update_file = False
 
     def encode(self):
