@@ -60,8 +60,6 @@ class ShareFile:
         with open(self.get_file_path(), 'rb') as file:
             while True:
                 data = file.read(self.BUF_SIZE)
-                # FileData.create(file_name=self.file_name, chunk_index=index, data=data)
-                # print(FileData.get(FileData.chunk_index == index))
                 if not data:
                     break
 
@@ -69,7 +67,6 @@ class ShareFile:
                 self.chunk_hashes[index] = self.sha1_hash.hexdigest()
                 self.addresses[index] = get_local_ip()
                 index += 1
-                # print("SHA1: {0}".format(self.sha1_hash.hexdigest()))
         self.num_chunks = index
 
     def get_chunk(self, chunk_index: int):
@@ -83,17 +80,12 @@ class ShareFile:
         print(received_chunks)
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-                # Seek and write chunk data
-        # for chunk in received_chunks:
-        #     print('FILE MANAGER: Attempting to write chunk!:', chunk.index)
-        #     with open(path, 'wb') as file:
-        #         file.seek(self.BUF_SIZE * chunk.index)
-        #         file.write(chunk.data)
-        #         slave.update_file = False
+
+        # Seek and write chunk data
         for chunk in received_chunks:
-            print('FILE MANAGER: Attempting to write chunk!:', chunk.index)
-            with open(path, 'wb') as file:
-                # file.seek(self.BUF_SIZE * chunk.index)
+            print('FILE MANAGER: Attempting to write chunk:', chunk.index)
+            with open(path, 'w+b') as file:
+                file.seek(self.BUF_SIZE * chunk.index)
                 file.write(chunk.data)
         slave.update_file = False
 
