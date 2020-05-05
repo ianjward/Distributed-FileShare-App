@@ -175,8 +175,6 @@ class SlaveProtocol(AMP):
         return src.utilities.networking.get_local_ip_address()
 
     def file_created(self, event: FileCreatedEvent):
-        print(event.src_path, event.event_type)
-
         share_file = ShareFile(event.src_path, self.share_name)
         self.files.append(share_file)
         update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())

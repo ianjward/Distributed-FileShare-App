@@ -119,7 +119,7 @@ class FileManager:
 
     def update_queue(self):
         share_file = self.queue.get()
-        with open(share_file.file_path, 'w+b') as file:
+        with open(share_file.file_path, 'r+b') as file:
             file.seek(self.BUF_SIZE * share_file.update_index)
 
     def get_chunk(self, share_file: ShareFile, chunk_index: int):
