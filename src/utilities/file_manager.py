@@ -80,6 +80,7 @@ class ShareFile:
 
     def write_chunks(self, slave, file_name):
         received_chunks = slave.received_chunks
+        print(received_chunks)
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
                 # Seek and write chunk data
@@ -135,16 +136,6 @@ class FileManager:
         with open(share_file.file_path, 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
-
-
-# class FileData(Model):
-#     file_name = TextField()
-#     chunk_index = IntegerField()
-#     data = BlobField()
-#
-#     class Meta:
-#         database = db
-#         database = db
 
 
 def decode_file(file:ShareFile):

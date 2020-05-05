@@ -1,7 +1,6 @@
 import glob
 import os
 from pathlib import Path
-
 from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 from watchdog.events import FileCreatedEvent, FileDeletedEvent, FileModifiedEvent
@@ -155,7 +154,6 @@ class SlaveProtocol(AMP):
             print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
-            # @TODO close connection here
 
         if awaiting_chunks == 0:
             # @TODO might not need
@@ -163,7 +161,6 @@ class SlaveProtocol(AMP):
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
             print('SLAVE: Updated all chunks for', file_name, 'closing ftp connection')
-            # @TODO close connection here
         file.__hash__()
 
     def open_ftp_server(self):
