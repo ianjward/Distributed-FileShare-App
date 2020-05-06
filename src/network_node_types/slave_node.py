@@ -1,5 +1,6 @@
 import glob
 import os
+import time
 from pathlib import Path
 from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
@@ -14,6 +15,7 @@ from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, Open
     CreateFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
 from os import path
+
 
 class SlaveProtocol(AMP):
     def connectionMade(self):
@@ -103,6 +105,7 @@ class SlaveProtocol(AMP):
         chunks_remaining = self.chunks_awaiting_update[file_name] - 1
         self.received_chunks.append(chunk)
         self.chunks_awaiting_update[file_name] -= 1
+
         # Write to file if all chunks received
         if chunks_remaining == 0:
             print('SLAVE: Received all chunks for', file_name)
@@ -184,13 +187,19 @@ class SlaveProtocol(AMP):
 
     def create_file(self, file_name):
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
+        file = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
 
-        if not path.exists(file_path):
+        if not path.exists(file):
             self.updating_file = True
 
-            print('no file found')
-            # create and do update here make sure to change mod time
+            open(file, 'w+')
+            share_file = ShareFile(file, self.share_name)
+            self.files.append(share_file)
+
+            share_file.last_mod_time = 0
+            self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+
+            self.updating_file = False
         return {}
     CreateFile.responder(create_file)
 
