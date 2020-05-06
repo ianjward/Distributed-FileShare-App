@@ -149,7 +149,19 @@ class Ui_MainWindow(object):
             self.create_share_button(file_name)
 
     def file_created(self, event: FileCreatedEvent):
-        self.create_share_button(Path(event.src_path).name)
+        name = Path(event.src_path).name
+        button = QPushButton(name)
+        button.setObjectName(name)
+
+        self.ians_share_grid.addWidget(button, self.row, self.column, QtCore.Qt.AlignTop)
+        self.column += 1
+        if self.column == 4:
+            self.column = 0
+            self.row += 1
+
+        new_file = os.path.join(self.share_loc(), name)
+        button.clicked.connect(
+            partial(self.open_file, new_file))  # Interesting: if using a lambda instead of a partial gc doesn't occur s
 
     def toggle_opening(self):
         self.opening_file = not self.opening_file
