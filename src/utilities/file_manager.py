@@ -160,7 +160,6 @@ class FileWatcher(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         self.process(event)
-        time.sleep(5)
 
     def on_created(self, event):
         self.process(event)

@@ -197,11 +197,10 @@ class SlaveProtocol(AMP):
             self.updating_file = True
 
             open(file, 'w+')
-            share_file = ShareFile(file, self.share_name)
+            share_file = ShareFile(os.path.join('monitored_files', 'ians_share'), self.share_name)
             self.files.append(share_file)
 
             share_file.last_mod_time = 0
-            print('here')
             update = self.callRemote(PullFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
         return {}
@@ -248,10 +247,11 @@ class SlaveProtocol(AMP):
 
         if datetime.now() - self.last_mod_time < timedelta(seconds=1):
             return
+
         if self.updating_file is False:
             self.last_mod_time = datetime.now()
             print(event.src_path, event.event_type)
-            share_file = ShareFile(event.src_path, self.share_name)
+            share_file = ShareFile(os.path.join('monitored_files', 'ians_share'), self.share_name)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
