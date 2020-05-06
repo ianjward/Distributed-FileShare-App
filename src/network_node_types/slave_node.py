@@ -192,7 +192,6 @@ class SlaveProtocol(AMP):
     def create_file(self, file_name):
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         file = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-        print('s', file_name)
 
         if not path.exists(file):
             self.updating_file = True
@@ -257,7 +256,6 @@ class SlaveProtocol(AMP):
             print('SLAVE: Updating file', share_file.file_name)
 
     def test(self, something, sharefile):
-        print(something, sharefile)
         sharefile.chunks_needed = something['chnks']
         total_chnks = sharefile.chunks_needed.split(' ')
         total_chnks.remove('')
