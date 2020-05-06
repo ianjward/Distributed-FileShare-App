@@ -8,7 +8,7 @@ from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, \
-    CheckTrackingFile
+    CheckTrackingFile, PullFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, CreateFile
 from os import listdir
@@ -82,8 +82,8 @@ class MasterProtocol(AMP):
         file_name = file.file_name
 
         self.seed_file(encoded_file, sender_ip)
-        for slave in self.factory.endpoints.values():
-            slave.callRemote(CreateFile, file_name=file_name)
+        # for slave in self.factory.endpoints.values():
+        #     slave.callRemote(CreateFile, file_name=file_name)
         return {}
     CreateMasterFile.responder(create_file)
 
@@ -141,10 +141,6 @@ class MasterProtocol(AMP):
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
 
-        if not mstr_has_file:
-            sync_actn = 'push'
-            mstr_file_curr = False
-
         print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
 
         # Track any new file chunks appended to end of file
@@ -165,6 +161,24 @@ class MasterProtocol(AMP):
             ip = self.factory.ip
         return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     UpdateFile.responder(update_file)
+
+    def pull_file(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        file_name = file.file_name
+        chnk_indx = 0
+        chnks_to_update = ''
+        sync_actn = 'pull'
+
+        ip = self.dist_ip
+        if sender_ip == self.dist_ip:
+            ip = self.factory.ip
+
+        while chnk_indx < file.num_chunks:
+            chnks_to_update += str(chnk_indx) + ' '
+            chnk_indx += 1
+
+        return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
+    PullFile.responder(pull_file)
 
     def delete_file(self, file_name):
         try:

@@ -9,6 +9,14 @@ class UpdateFile(Command):
                 ('actn'.encode(), Unicode())]
 
 
+class PullFile(Command):
+    arguments = [('encoded_file'.encode(), String()),
+                 ('sender_ip'.encode(), Unicode())]
+    response = [('ips'.encode(), Unicode()),
+                ('chnks'.encode(), Unicode()),
+                ('actn'.encode(), Unicode())]
+
+
 class DeleteFile(Command):
     arguments = [('file_name'.encode(), Unicode())]
 
