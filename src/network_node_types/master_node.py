@@ -175,7 +175,8 @@ class MasterProtocol(AMP):
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
         print(stored_ips[0], chnks_to_update, sync_actn)
-        return {'ips': sender_ip, 'chnks': chnks_to_update, 'actn': sync_actn}
+        ip = stored_ips[0]
+        return {'ips':ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     PullFile.responder(pull_file)
 
     def delete_file(self, file_name):
