@@ -60,7 +60,6 @@ class MasterProtocol(AMP):
         chunk_ips = []
         mod_times = []
 
-        print('seeding', file_name)
         # root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         # file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
         # if not path.exists(file_path):
@@ -84,10 +83,10 @@ class MasterProtocol(AMP):
     def create_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
-        
+
         self.seed_file(encoded_file, sender_ip)
         for slave in self.factory.endpoints.values():
-            slave.callRemote(slave.CreateFile, file_name=file_name)
+            slave.callRemote(CreateFile, file_name=file_name)
         return {}
     CreateMasterFile.responder(create_file)
 
