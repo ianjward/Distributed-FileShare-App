@@ -187,7 +187,10 @@ class SlaveProtocol(AMP):
         file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
 
         if not path.exists(file_path):
+            self.updating_file = True
+
             print('no file found')
+            # create and do update here make sure to change mod time
         return {}
     CreateFile.responder(create_file)
 
@@ -196,6 +199,7 @@ class SlaveProtocol(AMP):
 
         share_file = ShareFile(event.src_path, self.share_name)
         self.files.append(share_file)
+        #check if master tracking
         self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
         print('SLAVE: Created and updating file', share_file.file_name)
 
