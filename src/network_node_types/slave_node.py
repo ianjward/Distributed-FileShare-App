@@ -12,7 +12,7 @@ from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, \
-    CheckTrackingFile, PullFile
+    CheckTrackingFile, PullFile, Test
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, \
     CreateFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
@@ -258,6 +258,18 @@ class SlaveProtocol(AMP):
 
     def test(self, something, sharefile):
         print(something, sharefile)
+        sharefile.chunks_needed = something['chnks']
+        total_chnks = sharefile.chunks_needed.split(' ')
+        total_chnks.remove('')
+        sharefile.awaiting_chunks = len(total_chnks)
+        sync_actn = something['actn']
+        ip = something['ips']
+        self.updating_file = True
+
+        if self.client is None:
+            self.client = FTPClientCreator(ip, 8000, self)
+            self.client.start_connect()
+        deferLater(reactor, 1, self.connect_to_ftp, self.client, ip, 0, sharefile, sync_actn)
 
 
 class SlaveNode(ClientFactory):
