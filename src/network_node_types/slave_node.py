@@ -200,6 +200,11 @@ class SlaveProtocol(AMP):
             self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
 
             self.updating_file = False
+        else:
+            share_file = self.files[-1:]
+            self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            self.updating_file = False
+
         return {}
     CreateFile.responder(create_file)
 
