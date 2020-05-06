@@ -44,10 +44,11 @@ class MasterProtocol(AMP):
         request.addErrback(self.print_error)
 
     def is_tracking(self, file_name):
+        print('in tracking')
         if file_name in self.factory.tracked_files.keys():
-            return{'is_tracking':True}
+            return{'is_tracking':'True'}
         else:
-            return{'is_tracking':False}
+            return{'is_tracking':'False'}
     CheckTrackingFile.responder(is_tracking)
 
     def check_creds(self, creds:dict):
@@ -94,7 +95,7 @@ class MasterProtocol(AMP):
         ips = ''
         chnks_to_update = ''
         chnk_indx = 0
-        sync_actn = 'none'
+        sync_actn = 'pull'
         mstr_has_file = True
         mstrfile_mtchs_sntfile = False
 

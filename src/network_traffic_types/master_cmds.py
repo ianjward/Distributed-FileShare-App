@@ -37,4 +37,4 @@ class CreateMasterFile(Command):
 
 class CheckTrackingFile(Command):
     arguments = [('file_name'.encode(), Unicode())]
-    response = [('is_tracking'.encode(), Boolean())]
+    response = [('is_tracking'.encode(), Unicode())]

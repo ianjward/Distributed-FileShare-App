@@ -174,16 +174,15 @@ def monitor_file_changes(slave):
 
 def start_file_monitor(slave):
     observer = Observer()
-    root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     path_to_files = os.path.join('monitored_files', slave.share_name)
     print('FILE MONITOR: Monitoring', path_to_files)
     observer.schedule(FileWatcher(slave), path_to_files)
     observer.start()
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
+    # try:
+    #     while True:
+    #         time.sleep(1)
+    # except KeyboardInterrupt:
+    #     observer.stop()
 
     observer.join()

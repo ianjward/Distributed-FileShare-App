@@ -213,17 +213,16 @@ class SlaveProtocol(AMP):
             return
 
         self.updating_file = True
-        time.sleep(1)
+        # time.sleep(1)
         share_file = ShareFile(event.src_path, self.share_name)
 
         self.files.append(share_file)
         mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
-
         mstr_tracking_file.addCallback(self.add_to_master, share_file)
 
-    def add_to_master(self, master_needs_file, share_file: ShareFile):
+    def add_to_master(self, msg, share_file: ShareFile):
         print('SLAVE: Created file', share_file.file_name)
-        if master_needs_file['is_tracking'] is False:
+        if msg['is_tracking'] == 'False':
             print('SLAVE: Adding file to master')
             self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
         self.updating_file = False
@@ -250,11 +249,17 @@ class SlaveProtocol(AMP):
 
         if self.updating_file is False:
             self.last_mod_time = datetime.now()
-            print(event.src_path, event.event_type)
-            share_file = ShareFile(os.path.join('monitored_files', 'ians_share'), self.share_name)
+            print('SLAVE:', event.src_path, event.event_type)
+
+            share_file = ShareFile(event.src_path, self.share_name)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, share_file)
             print('SLAVE: Updating file', share_file.file_name)
+
+    def test(self, something, sharefile):
+        temp = something
+        self.update_file(temp, sharefile)
+        print(something, sharefile)
 
 
 class SlaveNode(ClientFactory):
