@@ -9,8 +9,6 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from pathlib import Path
 import src.utilities.networking
-import sqlite3
-from sqlite3 import Error
 from peewee import *
 
 

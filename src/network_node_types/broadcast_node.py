@@ -68,7 +68,6 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
             self.available_shares["ians_share"] = (3025, self.get_local_ip())
             print("BROADCAST: No available shares found.")
             MasterNode(3025, "ians_share", '1234', self)
-            # @TODO read-in share name + access code + always just start at 3025?
 
         for share in self.available_shares:
             self.join_network_as_slave(share, self.available_shares)

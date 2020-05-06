@@ -108,7 +108,6 @@ class SlaveProtocol(AMP):
             chunk.file.write_chunks(self, file_name)
         self.close_ftp(self.chunks_awaiting_update[file_name], chunk.file)
 
-        # @TODO close ftp and reset chunks needed
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, update_peers, file: ShareFile):
@@ -156,7 +155,6 @@ class SlaveProtocol(AMP):
             self.chunks_awaiting_update[file_name] = 0
 
         if awaiting_chunks == 0:
-            # @TODO might not need
             self.received_chunks = []
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
