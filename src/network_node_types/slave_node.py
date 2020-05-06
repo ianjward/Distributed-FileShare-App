@@ -207,7 +207,7 @@ class SlaveProtocol(AMP):
         self.updating_file = True
 
         share_file = ShareFile(event.src_path, self.share_name)
-        share_file.last_mod_time = 0
+        # share_file.last_mod_time = 0
         self.files.append(share_file)
         mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
         mstr_tracking_file.addCallback(self.add_to_master, share_file)
@@ -215,7 +215,7 @@ class SlaveProtocol(AMP):
     def add_to_master(self, master_needs_file, share_file:ShareFile):
         if master_needs_file:
             self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-        print('SLAVE: Created and updating file', share_file.file_name)
+        print('SLAVE: Created file', share_file.file_name)
         self.updating_file = False
 
     def file_deleted(self, event: FileDeletedEvent):
