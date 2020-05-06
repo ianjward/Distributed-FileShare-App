@@ -10,7 +10,8 @@ from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, \
+    CreateFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
 from os import path
 
@@ -181,12 +182,24 @@ class SlaveProtocol(AMP):
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
 
+    def create_file(self, file_name):
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
+
+        if not path.exists(file_path):
+            print('no file found')
+        return {}
+    CreateFile.responder(create_file)
+
     def file_created(self, event: FileCreatedEvent):
+        self.updating_file = True
+
         share_file = ShareFile(event.src_path, self.share_name)
         self.files.append(share_file)
-        update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-        update.addCallback(self.update_file, share_file)
+        self.callRemote(CreateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
         print('SLAVE: Created and updating file', share_file.file_name)
+
+        self.updating_file = False
 
     def file_deleted(self, event: FileDeletedEvent):
         file_name = Path(event.src_path).name

@@ -15,6 +15,10 @@ class DeleteSlaveFile(Command):
     arguments = [('file_name'.encode(), Unicode())]
 
 
+class CreateFile(Command):
+    arguments = [('file_name'.encode(), Unicode())]
+
+
 class AuthAccepted(Command):
     arguments = []
     response = []
