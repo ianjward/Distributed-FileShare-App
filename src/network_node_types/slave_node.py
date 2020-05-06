@@ -1,3 +1,4 @@
+from _datetime import datetime, timedelta
 import glob
 import os
 import time
@@ -19,6 +20,8 @@ from os import path
 
 
 class SlaveProtocol(AMP):
+    last_mod_time = datetime.now()
+
     def connectionMade(self):
         self.master_ip = self.factory.master_ip
         self.port = self.factory.port
@@ -205,6 +208,11 @@ class SlaveProtocol(AMP):
     CreateFile.responder(create_file)
 
     def file_created(self, event: FileCreatedEvent):
+        file_name = Path(event.src_path).name
+
+        if '~' in file_name:
+            return
+
         self.updating_file = True
         time.sleep(1)
         share_file = ShareFile(event.src_path, self.share_name)
@@ -214,7 +222,7 @@ class SlaveProtocol(AMP):
 
         mstr_tracking_file.addCallback(self.add_to_master, share_file)
 
-    def add_to_master(self, master_needs_file, share_file:ShareFile):
+    def add_to_master(self, master_needs_file, share_file: ShareFile):
         print('SLAVE: Created file', share_file.file_name)
         if master_needs_file['is_tracking'] is False:
             print('SLAVE: Adding file to master')
@@ -223,14 +231,30 @@ class SlaveProtocol(AMP):
 
     def file_deleted(self, event: FileDeletedEvent):
         file_name = Path(event.src_path).name
+        if '~' in file_name:
+            return
         self.callRemote(DeleteFile, file_name=file_name)
 
     def file_modified(self, event: FileModifiedEvent):
+        file_name = Path(event.src_path).name
+
+        # prevent path only updates
+        if '.' not in file_name:
+            return
+
+        # prevent temp file updates
+        if '~' in file_name:
+            return
+
+        if datetime.now() - self.last_mod_time < timedelta(seconds=1):
+            return
         if self.updating_file is False:
-            share_file = ShareFile(event.src_path, self.share_name)
-            update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.update_file, share_file)
-            print('SLAVE: Updating file', share_file.file_name)
+            self.last_mod_time = datetime.now()
+            print(event.src_path, event.event_type)
+            # share_file = ShareFile(event.src_path, self.share_name)
+            # update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            # update.addCallback(self.update_file, share_file)
+            # print('SLAVE: Updating file', share_file.file_name)
 
 
 class SlaveNode(ClientFactory):
