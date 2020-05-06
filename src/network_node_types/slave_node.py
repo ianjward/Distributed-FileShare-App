@@ -10,7 +10,8 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, CheckTrackingFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, \
+    CheckTrackingFile, PullFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, \
     CreateFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
@@ -197,15 +198,8 @@ class SlaveProtocol(AMP):
             self.files.append(share_file)
 
             share_file.last_mod_time = 0
-            self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-
-            self.updating_file = False
-        else:
-            share_file = ShareFile(file, self.share_name)
-            share_file.last_mod_time += .0001
-            self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            self.updating_file = False
-
+            update = self.callRemote(PullFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.update_file, share_file)
         return {}
     CreateFile.responder(create_file)
 
