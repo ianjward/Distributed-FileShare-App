@@ -9,7 +9,7 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, CheckTrackingFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, \
     CreateFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
@@ -199,10 +199,13 @@ class SlaveProtocol(AMP):
 
         share_file = ShareFile(event.src_path, self.share_name)
         self.files.append(share_file)
-        #check if master tracking
-        self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-        print('SLAVE: Created and updating file', share_file.file_name)
+        mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
+        mstr_tracking_file.addCallback(self.add_to_master, share_file)
 
+    def add_to_master(self, master_needs_file, share_file:ShareFile):
+        if master_needs_file:
+            self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+        print('SLAVE: Created and updating file', share_file.file_name)
         self.updating_file = False
 
     def file_deleted(self, event: FileDeletedEvent):
