@@ -68,17 +68,6 @@ class MasterProtocol(AMP):
         chunk_ips = []
         mod_times = []
 
-        # root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        # file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-        # if not path.exists(file_path):
-        #     open(file_path, 'w+')
-        #     for _ in hashes:
-        #         chunk_ips.append(sender_ip)
-        #         mod_times.append(file.last_mod_time)
-        #         self.factory.tracked_files[file_name] = (hashes, (chunk_ips, mod_times))
-        #     print('MASTER: Tracking', self.factory.tracked_files)
-        #     return {}
-
         # Start tracking each hash in the file
         for _ in hashes:
             chunk_ips.append(sender_ip)
@@ -114,7 +103,6 @@ class MasterProtocol(AMP):
             self.seed_file(encoded_file, sender_ip)
             mstr_has_file = False
 
-        # if mstr_has_file:
         # Set master tracking info for file
         stored_ips = self.factory.tracked_files[file_name][1][0]
         stored_num_chnks = len(stored_ips)
@@ -144,7 +132,6 @@ class MasterProtocol(AMP):
                     chnks_to_update += str(chnk_indx) + ' '
                     chnk_indx += 1
 
-            print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
             # Signal slave to push file
             if not mstr_file_curr and not mstrfile_mtchs_sntfile:
                 sync_actn = 'push'
@@ -153,6 +140,12 @@ class MasterProtocol(AMP):
 
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
+
+        if not mstr_has_file:
+            sync_actn = 'push'
+            mstr_file_curr = False
+
+        print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
 
         # Track any new file chunks appended to end of file
         while chnk_indx < file.num_chunks:
@@ -174,10 +167,13 @@ class MasterProtocol(AMP):
     UpdateFile.responder(update_file)
 
     def delete_file(self, file_name):
-        self.factory.tracked_files.pop(file_name)
-        print('MASTER: Stopped tracking', file_name)
-        for slave in self.factory.endpoints.values():
-            slave.callRemote(DeleteSlaveFile, file_name=file_name)
+        try:
+            self.factory.tracked_files.pop(file_name)
+            print('MASTER: Stopped tracking', file_name)
+            for slave in self.factory.endpoints.values():
+                slave.callRemote(DeleteSlaveFile, file_name=file_name)
+        except:
+            print('MASTER: Removed', file_name)
         return {}
     DeleteFile.responder(delete_file)
 
