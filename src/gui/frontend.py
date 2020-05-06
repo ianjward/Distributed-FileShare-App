@@ -250,14 +250,6 @@ def start_file_monitor(gui):
     observer.schedule(FileWatcher(gui), gui.share_loc())
     observer.start()
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-
-    observer.join()
-
 
 class AppWindow(QMainWindow):
     def __init__(self):
