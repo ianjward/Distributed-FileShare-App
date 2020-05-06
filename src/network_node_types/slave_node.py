@@ -251,10 +251,10 @@ class SlaveProtocol(AMP):
         if self.updating_file is False:
             self.last_mod_time = datetime.now()
             print(event.src_path, event.event_type)
-            # share_file = ShareFile(event.src_path, self.share_name)
-            # update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            # update.addCallback(self.update_file, share_file)
-            # print('SLAVE: Updating file', share_file.file_name)
+            share_file = ShareFile(event.src_path, self.share_name)
+            update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.update_file, share_file)
+            print('SLAVE: Updating file', share_file.file_name)
 
 
 class SlaveNode(ClientFactory):
