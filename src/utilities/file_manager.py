@@ -159,8 +159,7 @@ class FileWatcher(PatternMatchingEventHandler):
             self.share_node.file_modified(event)
 
     def on_modified(self, event):
-        # self.process(event)
-        print()
+        self.process(event)
 
     def on_created(self, event):
         self.process(event)
