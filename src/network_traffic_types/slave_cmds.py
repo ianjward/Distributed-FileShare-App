@@ -11,6 +11,10 @@ class RequestAuth(Command):
         ('sender_port'.encode(), Integer())]
 
 
+class DeleteSlaveFile(Command):
+    arguments = [('file_name'.encode(), Unicode())]
+
+
 class AuthAccepted(Command):
     arguments = []
     response = []

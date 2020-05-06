@@ -7,7 +7,7 @@ import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from os import listdir
@@ -50,6 +50,7 @@ class MasterProtocol(AMP):
                 self.dist_ip = ip
             print("MASTER: Authenticated:", creds['username'], creds['user_password'])
             self.factory.endpoints[ip] = self
+            print(self.factory.endpoints.keys())
             self.callRemote(AuthAccepted)
 
     def seed_file(self, encoded_file, sender_ip):
@@ -83,8 +84,6 @@ class MasterProtocol(AMP):
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
-        print('here', file_name)
-
         hashes = file.chunk_hashes
         ips = ''
         chnks_to_update = ''
@@ -156,6 +155,13 @@ class MasterProtocol(AMP):
             ip = self.factory.ip
         return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     UpdateFile.responder(update_file)
+
+    def delete_file(self, file_name):
+        print(file_name)
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share')
+        return {}
+    DeleteFile.responder(delete_file)
 
     def print_error(self, error):
         print(error)

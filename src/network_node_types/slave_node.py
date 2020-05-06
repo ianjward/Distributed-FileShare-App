@@ -9,7 +9,7 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
 
@@ -180,8 +180,8 @@ class SlaveProtocol(AMP):
         print('SLAVE: Created and updating file', share_file.file_name)
 
     def file_deleted(self, event: FileDeletedEvent):
-        # print(event.src_path, event.event_type)
-        i=0
+        file_name = Path(event.src_path).name
+        self.callRemote(DeleteFile, file_name=file_name.encode())
 
     def file_modified(self, event: FileModifiedEvent):
         i=0

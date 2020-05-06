@@ -9,6 +9,10 @@ class UpdateFile(Command):
                 ('actn'.encode(), Unicode())]
 
 
+class DeleteFile(Command):
+    arguments = [('file_name'.encode(), Unicode())]
+
+
 class SeedFile(Command):
     arguments = [('encoded_file'.encode(), String()),
                  ('sender_ip'.encode(), Unicode())]
