@@ -1,3 +1,5 @@
+import datetime
+from datetime import timedelta
 import hashlib
 import os
 import pickle
@@ -159,7 +161,8 @@ class FileWatcher(PatternMatchingEventHandler):
             self.share_node.file_modified(event)
 
     def on_modified(self, event):
-        self.process(event)
+        if time.time() - os.path.getmtime(event.src_path) > 2:
+            self.process(event)
 
     def on_created(self, event):
         self.process(event)

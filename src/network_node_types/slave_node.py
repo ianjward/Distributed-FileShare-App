@@ -158,7 +158,7 @@ class SlaveProtocol(AMP):
         file_name = file.file_name
 
         if awaiting_chunks == -1 and self.chunks_awaiting_update[file_name] != 0:
-            print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
+            print('SLAVE:', file_name, 'closing ftp connection')
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
 
