@@ -7,9 +7,9 @@ import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, CreateFile
 from os import listdir
 
 
@@ -81,6 +81,16 @@ class MasterProtocol(AMP):
         return {}
     SeedFile.responder(seed_file)
 
+    def create_file(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        file_name = file.file_name
+        
+        self.seed_file(encoded_file, sender_ip)
+        for slave in self.factory.endpoints.values():
+            slave.callRemote(slave.CreateFile, file_name=file_name)
+        return {}
+    CreateMasterFile.responder(create_file)
+
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
@@ -104,7 +114,7 @@ class MasterProtocol(AMP):
         stored_timestmp = self.factory.tracked_files[file_name][1][1]
         stored_hashes = self.factory.tracked_files[file_name][0]
 
-    # Check new file's hashes against stored master hashes
+        # Check new file's hashes against stored master hashes
         while chnk_indx < stored_num_chnks:
             mstr_file_curr = cmp_floats(stored_timestmp[chnk_indx], file.last_mod_time)
             # Check if master file matches the file being updates

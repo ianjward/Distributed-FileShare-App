@@ -20,3 +20,8 @@ class SeedFile(Command):
 
 class GetFileList(Command):
     response = [('files'.encode(), Unicode())]
+
+
+class CreateMasterFile(Command):
+    arguments = [('encoded_file'.encode(), String()),
+                 ('sender_ip'.encode(), Unicode())]
