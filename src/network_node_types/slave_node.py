@@ -181,7 +181,7 @@ class SlaveProtocol(AMP):
 
     def file_deleted(self, event: FileDeletedEvent):
         file_name = Path(event.src_path).name
-        self.callRemote(DeleteFile, file_name=file_name.encode())
+        self.callRemote(DeleteFile, file_name=file_name)
 
     def file_modified(self, event: FileModifiedEvent):
         i=0
