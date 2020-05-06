@@ -9,7 +9,7 @@ from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile
 from os import listdir
 
 
@@ -157,9 +157,8 @@ class MasterProtocol(AMP):
     UpdateFile.responder(update_file)
 
     def delete_file(self, file_name):
-        print(file_name)
-        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share')
+        for slave in self.factory.endpoints.values():
+            slave.callRemote(DeleteSlaveFile, file_name=file_name)
         return {}
     DeleteFile.responder(delete_file)
 

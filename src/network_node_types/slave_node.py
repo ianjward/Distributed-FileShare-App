@@ -10,9 +10,9 @@ from twisted.internet.protocol import ClientFactory
 from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, InitiateServe
 from src.network_node_types.ftp_node import create_ftp_server, FTPClientCreator
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile
-from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer
+from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile
 from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
-
+from os import path
 
 class SlaveProtocol(AMP):
     def connectionMade(self):
@@ -165,6 +165,15 @@ class SlaveProtocol(AMP):
         create_ftp_server(8000, self)
         return {}
     OpenTransferServer.responder(open_ftp_server)
+
+    def master_deletion_call(self, file_name):
+        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
+        if path.exists(file_path):
+            os.remove(file_path)
+            print('SLAVE: Removed', file_name)
+        return {}
+    DeleteSlaveFile.responder(master_deletion_call)
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
