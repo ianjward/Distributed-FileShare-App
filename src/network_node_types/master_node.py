@@ -45,9 +45,9 @@ class MasterProtocol(AMP):
 
     def is_tracking(self, file_name):
         if file_name in self.factory.tracked_files.keys():
-            return{'is_tracking':'True'}
+            return{'is_tracking': 'True'}
         else:
-            return{'is_tracking':'False'}
+            return{'is_tracking': 'False'}
     CheckTrackingFile.responder(is_tracking)
 
     def check_creds(self, creds:dict):
@@ -80,7 +80,6 @@ class MasterProtocol(AMP):
     def create_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
-
         self.seed_file(encoded_file, sender_ip)
         for slave in self.factory.endpoints.values():
             slave.callRemote(CreateFile, file_name=file_name)
@@ -189,7 +188,6 @@ class MasterProtocol(AMP):
             print('MASTER: Removed', file_name)
         return {}
     DeleteFile.responder(delete_file)
-
 
     def print_error(self, error):
         print(error)

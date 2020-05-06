@@ -192,13 +192,15 @@ class SlaveProtocol(AMP):
     def create_file(self, file_name):
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         file = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
+        print('s', file_name)
 
         if not path.exists(file):
             self.updating_file = True
 
             open(file, 'w+')
-            share_file = ShareFile(os.path.join('monitored_files', 'ians_share'), self.share_name)
+            share_file = ShareFile(file, self.share_name)
             self.files.append(share_file)
+            print('11111', share_file.file_name)
 
             share_file.last_mod_time = 0
             update = self.callRemote(PullFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
