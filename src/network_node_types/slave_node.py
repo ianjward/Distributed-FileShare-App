@@ -200,11 +200,10 @@ class SlaveProtocol(AMP):
             open(file, 'w+')
             share_file = ShareFile(file, self.share_name)
             self.files.append(share_file)
-            print('11111', share_file.file_name)
 
             share_file.last_mod_time = 0
             update = self.callRemote(PullFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.update_file, share_file)
+            update.addCallback(self.test, share_file)
         return {}
     CreateFile.responder(create_file)
 
@@ -258,11 +257,6 @@ class SlaveProtocol(AMP):
             print('SLAVE: Updating file', share_file.file_name)
 
     def test(self, something, sharefile):
-        temp = something
-        # self.update_file(temp, sharefile)
-        print(sharefile.file_name)
-        print(sharefile.get_file_path())
-        print(sharefile.num_chunks)
         print(something, sharefile)
 
 

@@ -8,7 +8,7 @@ from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
 from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, \
-    CheckTrackingFile, PullFile
+    CheckTrackingFile, PullFile, Test
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, CreateFile
 from os import listdir
@@ -203,6 +203,81 @@ class MasterProtocol(AMP):
         return {'files': files}
     GetFileList.responder(get_file_list)
 
+    def test(self, encoded_file, sender_ip):
+        file = decode_file(encoded_file)
+        file_name = file.file_name
+        hashes = file.chunk_hashes
+        ips = ''
+        chnks_to_update = ''
+        chnk_indx = 0
+        sync_actn = 'pull'
+        mstr_has_file = True
+        mstrfile_mtchs_sntfile = False
+
+        # Track any files this master has never seen before
+        if file_name not in self.factory.tracked_files:
+            self.seed_file(encoded_file, sender_ip)
+            mstr_has_file = False
+
+        # Set master tracking info for file
+        stored_ips = self.factory.tracked_files[file_name][1][0]
+        stored_num_chnks = len(stored_ips)
+        stored_timestmp = self.factory.tracked_files[file_name][1][1]
+        stored_hashes = self.factory.tracked_files[file_name][0]
+
+        # Check new file's hashes against stored master hashes
+        while chnk_indx < stored_num_chnks:
+            mstr_file_curr = cmp_floats(stored_timestmp[chnk_indx], file.last_mod_time)
+            # Check if master file matches the file being updates
+            if mstr_has_file:
+                mstrfile_mtchs_sntfile = stored_ips[chnk_indx] == sender_ip
+
+            # Choose latest file data to store
+            try:
+                if stored_hashes[chnk_indx] != hashes[chnk_indx]:
+                    stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
+                    stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
+                    stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
+            except:
+                stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
+                stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
+                stored_ips[chnk_indx] = stored_ips[chnk_indx]
+                mstr_file_curr = True
+                mstrfile_mtchs_sntfile = False
+                while chnk_indx < stored_num_chnks-1:
+                    chnks_to_update += str(chnk_indx) + ' '
+                    chnk_indx += 1
+
+            # Signal slave to push file
+            if not mstr_file_curr and not mstrfile_mtchs_sntfile:
+                sync_actn = 'push'
+            elif mstr_file_curr and not mstrfile_mtchs_sntfile:
+                sync_actn = 'pull'
+
+            chnks_to_update += str(chnk_indx) + ' '
+            chnk_indx += 1
+
+        print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
+
+        # Track any new file chunks appended to end of file
+        while chnk_indx < file.num_chunks:
+            chnks_to_update += str(chnk_indx) + ' '
+            chnk_indx += 1
+
+        # Add ips to push to
+        if sync_actn == 'push':
+            for ip in self.factory.endpoints.keys():
+                ips += str(ip) + ' '
+        # Add ips to pull from
+        else:
+            ips = self.factory.tracked_files[file_name][1][0][0]
+        print('MASTER: Awaiting', sync_actn,'for', file_name, chnks_to_update)
+        ip = self.dist_ip
+        if sender_ip == self.dist_ip:
+            ip = self.factory.ip
+        return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
+    Test.responder(test)
+
 
 class MasterNode(Factory):
     protocol = MasterProtocol
@@ -229,6 +304,7 @@ class MasterNode(Factory):
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
+
 
 
 
