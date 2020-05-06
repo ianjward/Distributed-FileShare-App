@@ -1,4 +1,4 @@
-from twisted.protocols.amp import AMP, Command, Unicode, String, Integer, Float
+from twisted.protocols.amp import AMP, Command, Unicode, String, Integer, Float, Boolean
 
 
 class UpdateFile(Command):
@@ -29,4 +29,4 @@ class CreateMasterFile(Command):
 
 class CheckTrackingFile(Command):
     arguments = [('file_name'.encode(), Unicode())]
-    response = [('is_tracking'.encode(), Unicode())]
+    response = [('is_tracking'.encode(), Boolean())]
