@@ -149,9 +149,7 @@ class Ui_MainWindow(object):
             self.create_share_button(file_name)
 
     def file_created(self, event: FileCreatedEvent):
-        # stub not currently needed
-        a = 1
-        # print(event.src_path, event.event_type)
+        self.create_share_button(Path(event.src_path).name)
 
     def toggle_opening(self):
         self.opening_file = not self.opening_file
