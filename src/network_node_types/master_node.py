@@ -7,7 +7,8 @@ import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from src.utilities.file_manager import decode_file
-from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile
+from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileList, DeleteFile, CreateMasterFile, \
+    CheckTrackingFile
 from src.network_traffic_types.broadcast_msgs import MasterUpdateMsg
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, CreateFile
 from os import listdir
@@ -41,6 +42,13 @@ class MasterProtocol(AMP):
         request = self.callRemote(RequestAuth)
         request.addCallback(self.check_creds)
         request.addErrback(self.print_error)
+
+    def is_tracking(self, file_name):
+        if file_name in self.factory.tracked_files.keys():
+            return{'is_tracking':True}
+        else:
+            return{'is_tracking':False}
+    CheckTrackingFile.responder(is_tracking)
 
     def check_creds(self, creds:dict):
         if creds['share_password'] == self.factory.access_code:

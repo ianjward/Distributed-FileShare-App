@@ -25,3 +25,8 @@ class GetFileList(Command):
 class CreateMasterFile(Command):
     arguments = [('encoded_file'.encode(), String()),
                  ('sender_ip'.encode(), Unicode())]
+
+
+class CheckTrackingFile(Command):
+    arguments = [('file_name'.encode(), Unicode())]
+    response = [('is_tracking'.encode(), Unicode())]
