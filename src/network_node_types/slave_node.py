@@ -207,6 +207,7 @@ class SlaveProtocol(AMP):
         self.updating_file = True
 
         share_file = ShareFile(event.src_path, self.share_name)
+        share_file.last_mod_time = 0
         self.files.append(share_file)
         mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
         mstr_tracking_file.addCallback(self.add_to_master, share_file)
