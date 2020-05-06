@@ -82,8 +82,8 @@ class MasterProtocol(AMP):
         file_name = file.file_name
 
         self.seed_file(encoded_file, sender_ip)
-        # for slave in self.factory.endpoints.values():
-        #     slave.callRemote(CreateFile, file_name=file_name)
+        for slave in self.factory.endpoints.values():
+            slave.callRemote(CreateFile, file_name=file_name)
         return {}
     CreateMasterFile.responder(create_file)
 
@@ -165,19 +165,17 @@ class MasterProtocol(AMP):
     def pull_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
+        stored_ips = self.factory.tracked_files[file_name][1][0]
+        stored_num_chnks = len(stored_ips)
         chnk_indx = 0
         chnks_to_update = ''
         sync_actn = 'pull'
 
-        ip = self.dist_ip
-        if sender_ip == self.dist_ip:
-            ip = self.factory.ip
-
-        while chnk_indx < file.num_chunks:
+        while chnk_indx < stored_num_chnks:
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
-
-        return {'ips': ip, 'chnks': chnks_to_update, 'actn': sync_actn}
+        print(stored_ips[0], chnks_to_update, sync_actn)
+        return {'ips': sender_ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     PullFile.responder(pull_file)
 
     def delete_file(self, file_name):
