@@ -157,6 +157,8 @@ class MasterProtocol(AMP):
     UpdateFile.responder(update_file)
 
     def delete_file(self, file_name):
+        self.factory.tracked_files.pop(file_name)
+        print('MASTER: Stopped tracking', file_name)
         for slave in self.factory.endpoints.values():
             slave.callRemote(DeleteSlaveFile, file_name=file_name)
         return {}
