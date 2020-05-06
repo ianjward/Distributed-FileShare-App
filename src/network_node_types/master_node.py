@@ -59,16 +59,17 @@ class MasterProtocol(AMP):
         chunk_ips = []
         mod_times = []
 
-        root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-        if not path.exists(file_path):
-            open(file_path, 'w+')
-            for _ in hashes:
-                chunk_ips.append(sender_ip)
-                mod_times.append(file.last_mod_time)
-                self.factory.tracked_files[file_name] = (hashes, (chunk_ips, mod_times))
-            print('MASTER: Tracking', self.factory.tracked_files)
-            return {}
+        print('seeding', file_name)
+        # root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+        # file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
+        # if not path.exists(file_path):
+        #     open(file_path, 'w+')
+        #     for _ in hashes:
+        #         chunk_ips.append(sender_ip)
+        #         mod_times.append(file.last_mod_time)
+        #         self.factory.tracked_files[file_name] = (hashes, (chunk_ips, mod_times))
+        #     print('MASTER: Tracking', self.factory.tracked_files)
+        #     return {}
 
         # Start tracking each hash in the file
         for _ in hashes:
@@ -82,6 +83,8 @@ class MasterProtocol(AMP):
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
+        print('here', file_name)
+
         hashes = file.chunk_hashes
         ips = ''
         chnks_to_update = ''
@@ -94,36 +97,36 @@ class MasterProtocol(AMP):
         if file_name not in self.factory.tracked_files:
             self.seed_file(encoded_file, sender_ip)
             mstr_has_file = False
-            
-        if mstr_has_file:
-            # Set master tracking info for file
-            stored_ips = self.factory.tracked_files[file_name][1][0]
-            stored_num_chnks = len(stored_ips)
-            stored_timestmp = self.factory.tracked_files[file_name][1][1]
-            stored_hashes = self.factory.tracked_files[file_name][0]
 
-        # Check new file's hashes against stored master hashes
-            while chnk_indx < stored_num_chnks:
-                mstr_file_curr = cmp_floats(stored_timestmp[chnk_indx], file.last_mod_time)
-                # Check if master file matches the file being updates
-                if mstr_has_file:
-                    mstrfile_mtchs_sntfile = stored_ips[chnk_indx] == sender_ip
+        # if mstr_has_file:
+        # Set master tracking info for file
+        stored_ips = self.factory.tracked_files[file_name][1][0]
+        stored_num_chnks = len(stored_ips)
+        stored_timestmp = self.factory.tracked_files[file_name][1][1]
+        stored_hashes = self.factory.tracked_files[file_name][0]
 
-                # Choose latest file data to store
-                try:
-                    if stored_hashes[chnk_indx] != hashes[chnk_indx]:
-                        stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
-                        stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
-                        stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
-                except:
-                    stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
-                    stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
-                    stored_ips[chnk_indx] = stored_ips[chnk_indx]
-                    mstr_file_curr = True
-                    mstrfile_mtchs_sntfile = False
-                    while chnk_indx < stored_num_chnks-1:
-                        chnks_to_update += str(chnk_indx) + ' '
-                        chnk_indx += 1
+    # Check new file's hashes against stored master hashes
+        while chnk_indx < stored_num_chnks:
+            mstr_file_curr = cmp_floats(stored_timestmp[chnk_indx], file.last_mod_time)
+            # Check if master file matches the file being updates
+            if mstr_has_file:
+                mstrfile_mtchs_sntfile = stored_ips[chnk_indx] == sender_ip
+
+            # Choose latest file data to store
+            try:
+                if stored_hashes[chnk_indx] != hashes[chnk_indx]:
+                    stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx] if mstr_file_curr else file.last_mod_time
+                    stored_hashes[chnk_indx] = stored_hashes[chnk_indx] if mstr_file_curr else file.sha1_hash
+                    stored_ips[chnk_indx] = stored_ips[chnk_indx] if mstr_file_curr else file.addresses[chnk_indx]
+            except:
+                stored_timestmp[chnk_indx] = stored_timestmp[chnk_indx]
+                stored_hashes[chnk_indx] = stored_hashes[chnk_indx]
+                stored_ips[chnk_indx] = stored_ips[chnk_indx]
+                mstr_file_curr = True
+                mstrfile_mtchs_sntfile = False
+                while chnk_indx < stored_num_chnks-1:
+                    chnks_to_update += str(chnk_indx) + ' '
+                    chnk_indx += 1
 
             print('MASTER: Stored file', file_name, 'is current:', mstr_file_curr)
             # Signal slave to push file
@@ -168,6 +171,7 @@ class MasterProtocol(AMP):
         print(files)
         return {'files': files}
     GetFileList.responder(get_file_list)
+
 
 class MasterNode(Factory):
     protocol = MasterProtocol
