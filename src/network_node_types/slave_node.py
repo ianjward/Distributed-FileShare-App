@@ -213,7 +213,6 @@ class SlaveProtocol(AMP):
             return
 
         self.updating_file = True
-        # time.sleep(1)
         share_file = ShareFile(event.src_path, self.share_name)
 
         self.files.append(share_file)
@@ -258,7 +257,10 @@ class SlaveProtocol(AMP):
 
     def test(self, something, sharefile):
         temp = something
-        self.update_file(temp, sharefile)
+        # self.update_file(temp, sharefile)
+        print(sharefile.file_name)
+        print(sharefile.get_file_path())
+        print(sharefile.num_chunks)
         print(something, sharefile)
 
 

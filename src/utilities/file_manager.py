@@ -69,7 +69,7 @@ class ShareFile:
 
     def get_chunk(self, chunk_index: int):
         # Seek and return chunk data
-        with open(self.file_path, 'rb') as file:
+        with open(self.get_file_path(), 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
 
@@ -123,12 +123,12 @@ class FileManager:
 
     def update_queue(self):
         share_file = self.queue.get()
-        with open(share_file.file_path, 'r+b') as file:
+        with open(share_file.get_file_path(), 'r+b') as file:
             file.seek(self.BUF_SIZE * share_file.update_index)
 
     def get_chunk(self, share_file: ShareFile, chunk_index: int):
         # Seek and return chunk data
-        with open(share_file.file_path, 'rb') as file:
+        with open(share_file.get_file_path(), 'rb') as file:
             file.seek(self.BUF_SIZE * chunk_index)
             return file.read(self.BUF_SIZE)
 
@@ -159,7 +159,8 @@ class FileWatcher(PatternMatchingEventHandler):
             self.share_node.file_modified(event)
 
     def on_modified(self, event):
-        self.process(event)
+        # self.process(event)
+        print()
 
     def on_created(self, event):
         self.process(event)

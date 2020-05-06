@@ -44,7 +44,6 @@ class MasterProtocol(AMP):
         request.addErrback(self.print_error)
 
     def is_tracking(self, file_name):
-        print('in tracking')
         if file_name in self.factory.tracked_files.keys():
             return{'is_tracking':'True'}
         else:
@@ -191,6 +190,7 @@ class MasterProtocol(AMP):
         return {}
     DeleteFile.responder(delete_file)
 
+
     def print_error(self, error):
         print(error)
 
@@ -198,7 +198,6 @@ class MasterProtocol(AMP):
         files = ''
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share')
-
 
         for file in listdir(path):
             files += Path(file).name + ' '
