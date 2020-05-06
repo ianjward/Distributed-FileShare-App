@@ -252,7 +252,7 @@ class SlaveProtocol(AMP):
 
             share_file = ShareFile(event.src_path, self.share_name)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.update_file, share_file)
+            update.addCallback(self.test, share_file)
             print('SLAVE: Updating file', share_file.file_name)
 
     def test(self, something, sharefile):
