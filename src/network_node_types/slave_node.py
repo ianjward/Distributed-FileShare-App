@@ -206,9 +206,9 @@ class SlaveProtocol(AMP):
 
     def file_created(self, event: FileCreatedEvent):
         self.updating_file = True
-
+        time.sleep(1)
         share_file = ShareFile(event.src_path, self.share_name)
-        # share_file.last_mod_time = 0
+
         self.files.append(share_file)
         mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
 
@@ -226,10 +226,11 @@ class SlaveProtocol(AMP):
         self.callRemote(DeleteFile, file_name=file_name)
 
     def file_modified(self, event: FileModifiedEvent):
-        i=0
-        # print(event.src_path, event.event_type)
-        # if not self.updating_file:
-        #     self.update_file(event.src_path)
+        if self.updating_file is False:
+            share_file = ShareFile(event.src_path, self.share_name)
+            update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.update_file, share_file)
+            print('SLAVE: Updating file', share_file.file_name)
 
 
 class SlaveNode(ClientFactory):
