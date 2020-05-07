@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint
 from twisted.protocols.amp import AMP
-from os import path
 import src.utilities.networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory
@@ -173,7 +172,6 @@ class MasterProtocol(AMP):
         while chnk_indx < stored_num_chnks:
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
-        print(stored_ips[0], chnks_to_update, sync_actn)
         ip = stored_ips[0]
         return {'ips':ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     PullFile.responder(pull_file)
@@ -199,7 +197,6 @@ class MasterProtocol(AMP):
 
         for file in listdir(path):
             files += Path(file).name + ' '
-        print(files)
         return {'files': files}
     GetFileList.responder(get_file_list)
 

@@ -82,7 +82,7 @@ class SlaveProtocol(AMP):
 
         master_files = self.callRemote(GetFileList)
         master_files.addCallback(self.update_untracked_files)
-        monitor_file_changes(self)
+        # monitor_file_changes(self)
 
     def update_untracked_files(self, master_dict):
         file_string = master_dict['files']

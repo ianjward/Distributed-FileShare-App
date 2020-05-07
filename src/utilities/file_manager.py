@@ -2,20 +2,11 @@ import hashlib
 import os
 import pickle
 import threading
-import time
-from os.path import abspath
 from twisted.internet import defer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from pathlib import Path
 import src.utilities.networking
-from peewee import *
-
-
-cwd = abspath(os.getcwd())
-src_path = str(Path(cwd).parents[0])
-db_path = os.path.join(src_path, 'files.db')
-db = SqliteDatabase(db_path)
 
 
 def get_local_ip():
@@ -50,7 +41,6 @@ class ShareFile:
             open(self.get_file_path(), 'w+')
             self.__hash__()
             self.last_mod_time = 0
-        # db.create_tables([FileData])
 
     def __hash__(self):
         index = 0
@@ -160,13 +150,16 @@ class FileWatcher(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         # self.process(event)
-        print()
+        a = 1
+        # print()
 
     def on_created(self, event):
-        self.process(event)
+        a=1
+        # self.process(event)
 
     def on_deleted(self, event):
-        self.process(event)
+        a=1
+        # self.process(event)
 
 
 def monitor_file_changes(slave):
@@ -179,11 +172,5 @@ def start_file_monitor(slave):
     print('FILE MONITOR: Monitoring', path_to_files)
     observer.schedule(FileWatcher(slave), path_to_files)
     observer.start()
-
-    # try:
-    #     while True:
-    #         time.sleep(1)
-    # except KeyboardInterrupt:
-    #     observer.stop()
 
     observer.join()
