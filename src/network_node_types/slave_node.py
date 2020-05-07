@@ -158,7 +158,7 @@ class SlaveProtocol(AMP):
         file_name = file.file_name
 
         if awaiting_chunks == -1 and self.chunks_awaiting_update[file_name] != 0:
-            print('SLAVE: Could not update all chunks for', file_name, 'closing ftp connection')
+            print('SLAVE:', file_name, 'closing ftp connection')
             self.updating_file = False
             self.chunks_awaiting_update[file_name] = 0
 
@@ -252,7 +252,7 @@ class SlaveProtocol(AMP):
 
             share_file = ShareFile(event.src_path, self.share_name)
             update = self.callRemote(UpdateFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.update_file, share_file)
+            update.addCallback(self.test, share_file)
             print('SLAVE: Updating file', share_file.file_name)
 
     def test(self, something, sharefile):
