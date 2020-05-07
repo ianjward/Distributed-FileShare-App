@@ -2,7 +2,8 @@ import hashlib
 import os
 import pickle
 import threading
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.internet.task import deferLater
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from pathlib import Path
@@ -45,17 +46,20 @@ class ShareFile:
     def __hash__(self):
         index = 0
         # Read in a file 60kb at a time hashing+saving each chunk
-        with open(self.get_file_path(), 'rb') as file:
-            while True:
-                data = file.read(self.BUF_SIZE)
-                if not data:
-                    break
+        try:
+            with open(self.get_file_path(), 'rb') as file:
+                while True:
+                    data = file.read(self.BUF_SIZE)
+                    if not data:
+                        break
 
-                self.sha1_hash.update(data)
-                self.chunk_hashes[index] = self.sha1_hash.hexdigest()
-                self.addresses[index] = get_local_ip()
-                index += 1
-        self.num_chunks = index
+                    self.sha1_hash.update(data)
+                    self.chunk_hashes[index] = self.sha1_hash.hexdigest()
+                    self.addresses[index] = get_local_ip()
+                    index += 1
+            self.num_chunks = index
+        except:
+            deferLater(reactor, 2, self.__hash__)
 
     def get_chunk(self, chunk_index: int):
         # Seek and return chunk data

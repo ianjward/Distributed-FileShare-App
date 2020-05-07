@@ -59,7 +59,7 @@ class SlaveProtocol(AMP):
                 self.files.append(share_file)
                 self.callRemote(SeedFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
                 print('SLAVE: Seeding file', share_file.file_name)
-            monitor_file_changes(self)
+            # monitor_file_changes(self)
 
         # Update instead of Seed files w/master
         else:
