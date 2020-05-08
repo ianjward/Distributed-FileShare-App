@@ -87,10 +87,9 @@ class MasterProtocol(AMP):
     # Adds a file to master and then pushes to slaves
     def create_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
-        file_name = file.file_name
         self.seed_file(encoded_file, sender_ip)
         for slave in self.factory.endpoints.values():
-            slave.callRemote(CreateFile, file_name=file_name)
+            slave.callRemote(CreateFile, encoded_file=file.encode())
         return {}
     CreateMasterFile.responder(create_file)
 

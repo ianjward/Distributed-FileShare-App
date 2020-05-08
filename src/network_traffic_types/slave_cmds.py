@@ -16,7 +16,7 @@ class DeleteSlaveFile(Command):
 
 
 class CreateFile(Command):
-    arguments = [('file_name'.encode(), Unicode())]
+    arguments = [('encoded_file'.encode(), String())]
 
 
 class AuthAccepted(Command):

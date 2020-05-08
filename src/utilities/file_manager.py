@@ -152,8 +152,7 @@ class FileWatcher(PatternMatchingEventHandler):
             self.share_node.file_deleted(event)
 
     def on_created(self, event):
-        a=1
-        # self.process(event)
+        self.process(event)
 
     def on_deleted(self, event):
         self.process(event)

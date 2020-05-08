@@ -17,7 +17,7 @@ from src.network_traffic_types.master_cmds import UpdateFile, SeedFile, GetFileL
     CheckTrackingFile, PullFile, Test, PushFile
 from src.network_traffic_types.slave_cmds import RequestAuth, AuthAccepted, OpenTransferServer, DeleteSlaveFile, \
     CreateFile
-from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk
+from src.utilities.file_manager import ShareFile, monitor_file_changes, Chunk, decode_file
 from os import path
 
 from src.utilities.file_monitor import FileMonitor
@@ -273,47 +273,47 @@ class SlaveProtocol(AMP):
         return {}
     DeleteSlaveFile.responder(master_deletion_call)
 
-
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
 
     def get_local_ip(self):
         return src.utilities.networking.get_local_ip_address()
 
-    def create_file(self, file_name):
+    def create_file(self, encoded_file):
+        file = decode_file(encoded_file)
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-        file = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
-
-        if not path.exists(file):
-            self.updating_file = True
-
+        path_to_file = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file.file_name)
+        print('in creating slave file', file.file_name)
+        if not path.exists(path_to_file):
+            print('slave missign created file')
+            self.file_statuses[file.file_name] = ('updating', time.time())
+            self.files.append(file)
             open(file, 'w+')
-            share_file = ShareFile(file, self.share_name)
-            self.files.append(share_file)
-            self.file_statuses[share_file.file_name] = ('updating', time.time())
-            update = self.callRemote(PullFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-            update.addCallback(self.test, share_file)
+            file.last_mod_time = 0
+            update = self.callRemote(UpdateFile, encoded_file=file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.update_file, file)
         return {}
     CreateFile.responder(create_file)
 
     # Event handler for file creation
     def file_created(self, event: FileCreatedEvent):
         file_name = Path(event.src_path).name
+
+        # Avoid adding temp files
         if '~' in file_name:
             return
-        self.updating_file = True
-        share_file = ShareFile(event.src_path, self.share_name)
-
-        self.files.append(share_file)
-        mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
-        mstr_tracking_file.addCallback(self.add_to_master, share_file)
+        temp_file = ShareFile(file_name, self.share_name)
+        temp_file.__hash__()
+        self.file_statuses[file_name] = ('updating', time.time())
+        deferLater(reactor, 2, self.add_to_master, temp_file)
 
     # Takes appropriate action after adding file to master
-    def add_to_master(self, msg, share_file: ShareFile):
-        print('SLAVE: Created file', share_file.file_name)
-        if msg['is_tracking'] == 'False':
-            print('SLAVE: Adding file to master')
-            self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+    def add_to_master(self, share_file: ShareFile):
+        while share_file.chunk_hashes == {}:
+            print('SLAVE: Awaiting hash for new file')
+            share_file.__hash__()
+        print('SLAVE: Adding', share_file.file_name, 'to master')
+        self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
         self.updating_file = False
 
     # Event handler for locally deleted files
