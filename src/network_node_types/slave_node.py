@@ -23,10 +23,12 @@ from os import path
 from src.utilities.file_monitor import FileMonitor
 
 
+# Communicates all local file changes to master node
 class SlaveProtocol(AMP):
     last_mod_time = datetime.now()
     file_statuses = {}
 
+    # Initializes slave on connection w/ master
     def connectionMade(self):
         self.master_ip = self.factory.master_ip
         self.port = self.factory.port
@@ -41,6 +43,7 @@ class SlaveProtocol(AMP):
 
         print("SLAVE: Talking to Master at", self.master_ip, ':', self.factory.port)
 
+    # Validates itself with master
     def authenticate(self):
         print("SLAVE: Sending authentication info to master")
         return {'share_password': '1234',
@@ -50,6 +53,7 @@ class SlaveProtocol(AMP):
                 'sender_port': self.port}
     RequestAuth.responder(authenticate)
 
+    # Handles local file changes/syncs
     def file_changed(self, file_name:str, mod_time):
         try:
             file_status = self.file_statuses[file_name][0]
@@ -73,6 +77,7 @@ class SlaveProtocol(AMP):
             print('An error occurred on line {} in statement {}'.format(line, text))
             self.update_file_status(file_name)
 
+    # Wrapper for local file changes to be sent to master
     def call_remote(self, share_file):
         try:
             update = self.callRemote(PushFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
@@ -85,6 +90,7 @@ class SlaveProtocol(AMP):
             print('An error occurred on line {} in statement {}'.format(line, text))
             self.update_file_status(share_file.file_name)
 
+    # Action taken after receiving dirrection from master about a local file change
     def push_file(self, update_peers, file):
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
@@ -103,6 +109,7 @@ class SlaveProtocol(AMP):
         except:
             print('SLAVE: Couldnt start ftp in push')
 
+    # Seeds master with files if first node to join net
     def initialize_files(self):
         print("SLAVE: Received auth ok")
 
@@ -128,6 +135,7 @@ class SlaveProtocol(AMP):
         return {}
     AuthAccepted.responder(initialize_files)
 
+    # Updates local/master files upon joining net
     def update_all_share_files(self):
         path_to_files = os.path.join(self.file_directory, '*')
         file_locations = glob.glob(path_to_files)
@@ -144,6 +152,7 @@ class SlaveProtocol(AMP):
         master_files = self.callRemote(GetFileList)
         master_files.addCallback(self.update_untracked_files)
 
+    # Adds any local files master is not tracking on startup
     def update_untracked_files(self, master_dict):
         file_string = master_dict['files']
         mastr_files = file_string.split(' ')
@@ -165,6 +174,7 @@ class SlaveProtocol(AMP):
                 update.addCallback(self.update_file, share_file)
                 print('SLAVE: Updating file', share_file.file_name)
 
+    # Handles ftp chunk reception
     def receive_chunk(self, chunk: Chunk):
         file_name = chunk.file.file_name
         chunks_remaining = self.chunks_awaiting_update[file_name] - 1
@@ -185,6 +195,7 @@ class SlaveProtocol(AMP):
         deferLater(reactor, 2, self.update_file_status, file_name)
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
+    # Updates a single file w/master
     def update_file(self, update_peers, file: ShareFile):
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
@@ -203,9 +214,11 @@ class SlaveProtocol(AMP):
         except:
             print('SLAVE: Couldnt start ftp in update')
 
+    # Enables local file changes to be tracked once done receiving a file from remote node
     def update_file_status(self, file_name: str):
         self.file_statuses[file_name] = ('ok', time.time())
 
+    # Connects to a distant node for file transfer
     def connect_to_ftp(self, client, ip: str, attempts: int, file: ShareFile, sync_actn: str):
         file_server = client.factory.distant_end
         # Attempt to reconnect to ftp server
@@ -228,6 +241,7 @@ class SlaveProtocol(AMP):
         if attempts > 5:
             print('SLAVE: Could not update', file.file_name, 'no connection to', ip)
 
+    # Severs ftp connection on finish/timeout/max # attempts made
     def close_ftp(self, awaiting_chunks: int, file: ShareFile):
         file_name = file.file_name
 
@@ -243,11 +257,13 @@ class SlaveProtocol(AMP):
             print('SLAVE: Updated all chunks for', file_name, 'closing ftp connection')
         file.__hash__()
 
+    # Creates a file server
     def open_ftp_server(self):
         create_ftp_server(8000, self)
         return {}
     OpenTransferServer.responder(open_ftp_server)
 
+    # Tells master to delete a file
     def master_deletion_call(self, file_name):
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         file_path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
@@ -256,6 +272,7 @@ class SlaveProtocol(AMP):
             print('SLAVE: Removed', file_name)
         return {}
     DeleteSlaveFile.responder(master_deletion_call)
+
 
     def connection_lost(self, node, reason):
         print("SLAVE:", "Connection lost", reason)
@@ -279,6 +296,7 @@ class SlaveProtocol(AMP):
         return {}
     CreateFile.responder(create_file)
 
+    # Event handler for file creation
     def file_created(self, event: FileCreatedEvent):
         file_name = Path(event.src_path).name
         if '~' in file_name:
@@ -290,6 +308,7 @@ class SlaveProtocol(AMP):
         mstr_tracking_file = self.callRemote(CheckTrackingFile, file_name=share_file.file_name)
         mstr_tracking_file.addCallback(self.add_to_master, share_file)
 
+    # Takes appropriate action after adding file to master
     def add_to_master(self, msg, share_file: ShareFile):
         print('SLAVE: Created file', share_file.file_name)
         if msg['is_tracking'] == 'False':
@@ -297,6 +316,7 @@ class SlaveProtocol(AMP):
             self.callRemote(CreateMasterFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
         self.updating_file = False
 
+    # Event handler for locally deleted files
     def file_deleted(self, event: FileDeletedEvent):
         file_name = Path(event.src_path).name
         if '~' in file_name:
@@ -304,6 +324,7 @@ class SlaveProtocol(AMP):
         self.callRemote(DeleteFile, file_name=file_name)
 
 
+# Creates slave nodes
 class SlaveNode(ClientFactory):
     protocol = SlaveProtocol
 

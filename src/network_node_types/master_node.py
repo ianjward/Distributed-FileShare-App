@@ -20,6 +20,7 @@ def cmp_floats(a: float, b: float) -> bool:
 
 class MasterProtocol(AMP):
 
+    # Handles new slave connection
     def connectionMade(self):
         self.dist_ip = self.factory.ip
 
@@ -29,9 +30,11 @@ class MasterProtocol(AMP):
         self.update_broadcasted_shares()
         self.request_auth()
 
+    # Connect timout error handler
     def print_error(self, error):
         print(error)
 
+    # Ensures broadcast is sending out the next available port to authenticate w/ master on
     def update_broadcasted_shares(self):
         shares = self.factory.broadcast_proto.available_shares
         self.factory.nxt_open_port += 1
@@ -41,11 +44,13 @@ class MasterProtocol(AMP):
         msg = MasterUpdateMsg(shares)
         self.factory.broadcast_proto.send_datagram(msg)
 
+    # Makes slave authenticate before joining
     def request_auth(self):
         request = self.callRemote(RequestAuth)
         request.addCallback(self.check_creds)
         request.addErrback(self.print_error)
 
+    # Tells slave if master is currently tracking a file
     def is_tracking(self, file_name):
         if file_name in self.factory.tracked_files.keys():
             return{'is_tracking': 'True'}
@@ -79,6 +84,7 @@ class MasterProtocol(AMP):
         return {}
     SeedFile.responder(seed_file)
 
+    # Adds a file to master and then pushes to slaves
     def create_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
@@ -88,6 +94,7 @@ class MasterProtocol(AMP):
         return {}
     CreateMasterFile.responder(create_file)
 
+    # Checks if file is uptodate provides slave w/appropriate action based on updatedness
     def update_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
@@ -179,6 +186,7 @@ class MasterProtocol(AMP):
         return {'ips':ip, 'chnks': chnks_to_update, 'actn': sync_actn}
     PullFile.responder(pull_file)
 
+    # Force updates a file the master is tracking
     def push_file(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         file_name = file.file_name
@@ -188,12 +196,13 @@ class MasterProtocol(AMP):
         chnks_to_update = ''
         sync_actn = 'push'
 
-        print('stored num chunks',stored_num_chnks)
-
+        # Add appended chunks
         while chnk_indx < stored_num_chnks:
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
         ip = self.dist_ip
+
+        # Ensure enpoint is up todate
         if sender_ip == self.dist_ip:
             ip = list(self.factory.endpoints.keys())[1]
         return {'ips':ip, 'chnks': chnks_to_update, 'actn': sync_actn}
@@ -210,7 +219,7 @@ class MasterProtocol(AMP):
         return {}
     DeleteFile.responder(delete_file)
 
-
+    # Returns a list of all files master is tracking
     def get_file_list(self):
         files = ''
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
@@ -222,6 +231,7 @@ class MasterProtocol(AMP):
     GetFileList.responder(get_file_list)
 
 
+# Creates master protocols
 class MasterNode(Factory):
     protocol = MasterProtocol
     endpoints = {}
