@@ -73,7 +73,7 @@ class ShareFile:
         root_path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
         path = os.path.join(root_path, 'src', 'monitored_files', 'ians_share', file_name)
         open(path, 'w').close()
-        
+
         # Seek and write chunk data
         for chunk in received_chunks:
             print('FILE MANAGER: Attempting to write chunk:', chunk.index)

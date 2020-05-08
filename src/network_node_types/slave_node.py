@@ -288,7 +288,7 @@ class SlaveProtocol(AMP):
             print('slave missign created file')
             self.file_statuses[file.file_name] = ('updating', time.time())
             self.files.append(file)
-            open(file, 'w+')
+            open(path_to_file, 'w').close()
             file.last_mod_time = 0
             update = self.callRemote(UpdateFile, encoded_file=file.encode(), sender_ip=self.get_local_ip())
             update.addCallback(self.update_file, file)
