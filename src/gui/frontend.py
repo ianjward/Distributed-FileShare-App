@@ -171,7 +171,7 @@ class Ui_MainWindow(object):
         self.opening_file = not self.opening_file
         print('')
 
-    
+
     def file_deleted(self, event: FileDeletedEvent):
         # Remove button from share display
         try:

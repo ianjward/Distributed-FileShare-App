@@ -156,8 +156,7 @@ class FileWatcher(PatternMatchingEventHandler):
         # self.process(event)
 
     def on_deleted(self, event):
-        a=1
-        # self.process(event)
+        self.process(event)
 
 
 def monitor_file_changes(slave):
