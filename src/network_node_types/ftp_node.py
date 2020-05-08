@@ -1,6 +1,7 @@
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint, TCP4ClientEndpoint, connectProtocol
 from twisted.internet.protocol import ClientFactory, Factory
+from twisted.internet.task import deferLater
 from twisted.protocols.amp import AMP
 import src
 from src.utilities.file_manager import Chunk, decode_chunk
@@ -72,7 +73,7 @@ class TransferClientProtocol(AMP):
             self.factory.slave.chunks_awaiting_update[decoded_chunk.file.file_name] = decoded_chunk.chunks_in_file
         print("FTP CLIENT: Received chunk",
               decoded_chunk.index + 1, 'of', decoded_chunk.chunks_in_file, 'for',
-              decoded_chunk.file.file_name)
+              decoded_chunk.file.file_name, chunk.data)
         self.factory.slave.receive_chunk(decoded_chunk)
         return {}
     ReceiveChunk.responder(receive_chunk)
@@ -88,7 +89,9 @@ class TransferClientProtocol(AMP):
             if i != '':
                 chunk = Chunk(int(i), file)
                 chunk.data = chunks[int(i)]
+                print('FTP SERVER: Serving', chunk.data)
                 self.callRemote(ReceiveChunk, chunk=chunk.encode())
+        deferLater(reactor, 2, self.factory.slave.update_file_status, file.file_name)
         return {}
     ServeChunks.responder(serve_chunks)
 

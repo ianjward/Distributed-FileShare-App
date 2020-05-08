@@ -2,6 +2,7 @@ import hashlib
 import os
 import pickle
 import threading
+import time
 from twisted.internet import defer, reactor
 from twisted.internet.task import deferLater
 from watchdog.observers import Observer
@@ -39,8 +40,8 @@ class ShareFile:
             self.chunk_hashes = {}
             self.addresses = {}
             self.chunks_needed = ''
-            open(self.get_file_path(), 'w+')
-            self.__hash__()
+            # open(self.get_file_path(), 'w+')
+            # self.__hash__()
             self.last_mod_time = 0
 
     def __hash__(self):
@@ -84,6 +85,7 @@ class ShareFile:
                 with open(path, 'r+b') as file:
                     file.seek(self.BUF_SIZE * chunk.index)
                     file.write(chunk.data)
+
         slave.update_file = False
 
     def encode(self):
@@ -148,14 +150,6 @@ class FileWatcher(PatternMatchingEventHandler):
 
         if event.event_type == 'deleted':
             self.share_node.file_deleted(event)
-
-        if event.event_type == 'modified':
-            self.share_node.file_modified(event)
-
-    def on_modified(self, event):
-        # self.process(event)
-        a = 1
-        # print()
 
     def on_created(self, event):
         a=1
