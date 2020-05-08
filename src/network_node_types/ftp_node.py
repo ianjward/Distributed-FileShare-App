@@ -9,24 +9,28 @@ from src.network_traffic_types.ftp_cmds import ServeChunks, ReceiveChunk, Initia
 from src.utilities.file_manager import decode_file, ShareFile
 
 
+# Acts as a ftp server
 class TransferServerProtocol(AMP):
 
     def connectionMade(self):
         self.factory.distant_end = self
         print("FTP SERVER: Connected to client")
 
+    # Tells client side to request file chunks
     def initiate_serve(self, encoded_file):
         file = decode_file(encoded_file)
         self.callRemote(ServeChunks, encoded_file=file.encode(), sender_ip=get_local_ip())
         return {}
     InitiateServe.responder(initiate_serve)
 
+    # Sends client all chunks
     def serve_chunks(self, encoded_file, sender_ip):
         file = decode_file(encoded_file)
         print('FTP SERVER:', get_local_ip(), 'Serving file', file.file_name)
         chunks_needed = file.chunks_needed.split(' ')
         file.file_path = file.get_file_path()
         chunks = self.get_chunks(file.file_path)
+
         # Return each chunk with its data
         for i in chunks_needed:
             if i != '':
@@ -36,6 +40,7 @@ class TransferServerProtocol(AMP):
         return {}
     ServeChunks.responder(serve_chunks)
 
+    # Reads in local file to obtain chunks to server
     def get_chunks(self, file_path: str) -> dict:
         buffer = 60000
         chunks = {}
@@ -62,6 +67,7 @@ class TransferServerProtocol(AMP):
     ReceiveChunk.responder(receive_chunk)
 
 
+# Acts as the receiving end of an ftp file transfer
 class TransferClientProtocol(AMP):
     def connectionMade(self):
         self.factory.distant_end = self
@@ -122,6 +128,7 @@ class FTPServer(Factory):
     slave = None
 
 
+# Creates ftp receiver clients
 class FTPClientCreator:
     def __init__(self, ip: str, port: int, slave):
         self.ip = ip
@@ -135,6 +142,7 @@ class FTPClientCreator:
         return self.endpoint.connect(self.factory)
 
 
+# Creates an ftp server that can send data
 def create_ftp_server(port: int, slave):
     new_endpoint = TCP4ServerEndpoint(reactor, port)
     server = FTPServer()

@@ -16,6 +16,7 @@ from watchdog.events import FileCreatedEvent, FileDeletedEvent
 import webbrowser
 
 
+# Creates the GUI
 class Ui_MainWindow(object):
     opening_file = True
     row = 0
@@ -80,6 +81,7 @@ class Ui_MainWindow(object):
         self.grid_layout.setGeometry(QtCore.QRect(-1, -1, 631, 681))
         self.grid_layout.setObjectName("grid_layout")
 
+        # Initiliaze grid layout
         self.ians_share_grid = QtWidgets.QGridLayout(self.grid_layout)
         self.ians_share_grid.setColumnStretch(0, 4)
         self.ians_share_grid.setColumnStretch(1, 4)
@@ -89,11 +91,10 @@ class Ui_MainWindow(object):
         self.ians_share_grid.setObjectName("ians_share_grid")
         self.share_tabs.addTab(self.ians_share_tab, "")
 
-
+        # Create new share ability (not currently implemented)
         self.new_share_tab = QtWidgets.QWidget()
         self.new_share_tab.setObjectName("new_share_tab")
         self.share_tabs.addTab(self.new_share_tab, "")
-
         self.user_interface.addWidget(self.share_tabs)
         self.user_interface.setStretch(0, 1)
         self.user_interface.setStretch(1, 1)
@@ -106,19 +107,20 @@ class Ui_MainWindow(object):
         self.create_file_tree()
         self.load_existing_files()
         self.file_tree.doubleClicked.connect(self.tree_item_clicked)
-
         monitor_file_changes(self)
         self.retranslate_ui(MainWindow)
         self.share_tabs.setCurrentIndex(0)
         self.current_file = ''
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    #Sets pyqt overarching window settings
     def retranslate_ui(self, main_window):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", "Spencer and Ian\'s Distributed Fileshare"))
         self.share_tabs.setTabText(self.share_tabs.indexOf(self.ians_share_tab), _translate("MainWindow", "Ians Share"))
         self.share_tabs.setTabText(self.share_tabs.indexOf(self.new_share_tab), _translate("MainWindow", "+"))
 
+    # Fills out file tree on left hand side
     def create_file_tree(self):
         os_root = os.path.abspath(os.sep)
         self.model = QFileSystemModel()
@@ -131,6 +133,7 @@ class Ui_MainWindow(object):
         self.file_tree.setIndentation(20)
         self.file_tree.setSortingEnabled(True)
 
+    # Handles file tree clicks
     def tree_item_clicked(self, index):
         self.current_file = self.model.filePath(index)
         file_name = self.current_file[self.current_file.rfind('/') + 1:]
@@ -148,6 +151,7 @@ class Ui_MainWindow(object):
         else:
             self.create_share_button(file_name)
 
+    # Create new display file
     def file_created(self, event: FileCreatedEvent):
         name = Path(event.src_path).name
         button = QPushButton(name)
@@ -167,6 +171,7 @@ class Ui_MainWindow(object):
         self.opening_file = not self.opening_file
         print('')
 
+    
     def file_deleted(self, event: FileDeletedEvent):
         # Remove button from share display
         try:

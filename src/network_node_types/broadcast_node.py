@@ -9,9 +9,11 @@ from twisted.application import internet
 from twisted.internet import reactor
 
 
+# Broadcasts all available net shares and the port to start authentication with them on
 class BroadcastNode(DatagramProtocol, TimeoutMixin):
     wanted_networks = []
 
+    # Attempts to find all shares on network, if no response in 3.5s starts its own share
     def startProtocol(self):
         self.transport.socket.setsockopt(SOL_SOCKET, SO_BROADCAST, True)
         self.state = "NEEDS_IPS"
@@ -19,12 +21,14 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
         self.send_datagram(RequestMastersMsg())
         reactor.callLater(3.5, self.create_network_node)
 
+    # Sends all broadcast traffic
     def send_datagram(self, msg:Message):
         broadcast_port = 7999
         # broadcast_ip = '192.168.1.255'
         broadcast_ip = '255.255.255.255'
         self.transport.write(msg.encode_msg(), (broadcast_ip, broadcast_port))
 
+    # Receives all broadcast traffic
     def datagramReceived(self, encoded_msg, host: tuple):
         msg = decode_msg(encoded_msg)
         sender = host[0]
@@ -43,6 +47,7 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
             print("BROADCAST: Received msg", msg.mType)
             self.receive_master_list(msg)
 
+    # Sends available share info to requester
     def send_master_list(self, sender:tuple):
         if self.state == "HAS_IPS":
             response = MasterListMsg(self.available_shares).encode_msg()
@@ -50,11 +55,13 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
             print("BROADCAST: Received Share ip request from: " + str(sender))
             print("BROADCAST: Responded to ", str(sender), " with ", self.available_shares)
 
+    # Receives share info from network
     def receive_master_list(self, msg:MasterListMsg):
         self.available_shares = msg.master_dict
         print('BROADCAST: Dictionary set:', msg.master_dict)
         self.state = "HAS_IPS"
 
+    # Creates local slave node
     def join_network_as_slave(self, share_name, available_shares):
         # global wanted_networks
         if share_name in self.wanted_networks:
@@ -62,6 +69,7 @@ class BroadcastNode(DatagramProtocol, TimeoutMixin):
             master_ip = available_shares[share_name][1]
             SlaveNode(port, master_ip, share_name)
 
+    # Creates master node if no shares found
     def create_network_node(self):
         if self.state == 'NEEDS_IPS':
             self.state = "HAS_IPS"
