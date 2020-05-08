@@ -169,6 +169,11 @@ class SlaveProtocol(AMP):
         file_name = chunk.file.file_name
         chunks_remaining = self.chunks_awaiting_update[file_name] - 1
         self.received_chunks.append(chunk)
+        # adjust for resent chunks
+        if chunks_remaining == -1:
+            self.chunks_awaiting_update[file_name] = chunk.chunks_in_file
+            chunks_remaining = chunk.chunks_in_file - 1
+            
         self.chunks_awaiting_update[file_name] -= 1
 
         # Write to file if all chunks received
@@ -181,7 +186,6 @@ class SlaveProtocol(AMP):
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, update_peers, file: ShareFile):
-        print('here')
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')
