@@ -74,19 +74,34 @@ class SlaveProtocol(AMP):
             self.update_file_status(file_name)
 
     def call_remote(self, share_file):
-        update = self.callRemote(PushFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
-        update.addCallback(self.update_file, share_file)
+        try:
+            update = self.callRemote(PushFile, encoded_file=share_file.encode(), sender_ip=self.get_local_ip())
+            update.addCallback(self.push_file, share_file)
+        except AssertionError:
+            _, _, tb = sys.exc_info()
+            traceback.print_tb(tb)  # Fixed format
+            tb_info = traceback.extract_tb(tb)
+            filename, line, func, text = tb_info[-1]
+            print('An error occurred on line {} in statement {}'.format(line, text))
+            self.update_file_status(share_file.file_name)
 
-    def force_push(self, update_peers, file: ShareFile):
+    def push_file(self, update_peers, file):
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')
         file.awaiting_chunks = len(total_chnks)
         sync_actn = update_peers['actn']
-
+        if sync_actn == 'pull':
+            self.file_statuses[file.file_name] = ('updating', time.time())
         ip = update_peers['ips']
-        print(self.client, ip, sync_actn)
-        deferLater(reactor, 1, self.update_file, update_peers, file)
+        self.updating_file = True
+        try:
+            if self.client is None:
+                self.client = FTPClientCreator(ip, 8000, self)
+                self.client.start_connect()
+            deferLater(reactor, 1, self.connect_to_ftp, self.client, ip, 0, file, sync_actn)
+        except:
+            print('SLAVE: Couldnt start ftp in push')
 
     def initialize_files(self):
         print("SLAVE: Received auth ok")
@@ -166,6 +181,7 @@ class SlaveProtocol(AMP):
         deferLater(reactor, 5, self.close_ftp, -1, chunk.file)
 
     def update_file(self, update_peers, file: ShareFile):
+        print('here')
         file.chunks_needed = update_peers['chnks']
         total_chnks = file.chunks_needed.split(' ')
         total_chnks.remove('')

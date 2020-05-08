@@ -188,6 +188,8 @@ class MasterProtocol(AMP):
         chnks_to_update = ''
         sync_actn = 'push'
 
+        print('stored num chunks',stored_num_chnks)
+
         while chnk_indx < stored_num_chnks:
             chnks_to_update += str(chnk_indx) + ' '
             chnk_indx += 1
